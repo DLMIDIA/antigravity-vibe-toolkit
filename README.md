@@ -57,6 +57,29 @@ Automatically executes TypeScript/Python syntax checking, linters, the 350-line 
 
 ---
 
+## 🛡️ What is `agy-vibe verify` (Quality Gates)? Do I have to run it?
+
+### Do I need to run this manually?
+**No, you are never required to run it manually!** You have two convenient workflows:
+
+1. **Fully Automated via Antigravity**: In your conversation, simply instruct the agent:
+   > *"Implement this feature and verify everything with the Quality Gates before finishing."*
+   Antigravity will automatically activate the `evidence-first` skill, run `agy-vibe verify` in a background terminal, and present the verified test results directly in its reply.
+2. **Manual Execution (Whenever You Want)**: If you prefer to check your repository before pushing code to GitHub:
+   ```bash
+   cd /path/to/your/project
+   agy-vibe verify
+   ```
+
+### The 5 Quality Gate Protection Barriers:
+1. **Modular Ceiling (<= 350 lines)**: Scans all source files to ensure no file exceeds 350 lines (large files drastically increase AI hallucination and subtle bugs).
+2. **Type Safety (Typecheck)**: Executes `npx tsc --noEmit` (TypeScript) or Python compiler to verify zero broken imports or invalid parameter signatures.
+3. **Code Quality Linter**: Executes `npm run lint` to enforce clean styling and purge dead/unused variables.
+4. **Automated Test Suite**: Executes `npm test` or `pytest` to guarantee that new changes introduce zero regressions to existing code.
+5. **Production Build**: Executes `npm run build` to simulate real-world production packaging and catch bundling issues.
+
+---
+
 ## 🔬 How the Google Antigravity Skills System Actually Works
 
 <p align="center">
@@ -77,30 +100,22 @@ Antigravity discovers and resolves conflicting skills hierarchically:
 3. **`~/.gemini/antigravity/builtin/skills/` (Global Machine-Local)**: Where our installer registers skills for machine-wide access.
 4. **Builtin System Skills**: Mounted by name by the agent engine.
 
-### 3. Anatomy of a Canonical Antigravity Skill
-Each skill directory in `skills/<name>/` contains:
-```text
-skills/evidence-first/
-├── SKILL.md          # Required: YAML frontmatter + step-by-step agent instructions
-├── scripts/          # Optional: Automated executable helper scripts (Bash, Python, Node)
-├── references/       # Optional: In-depth technical manuals and schemas
-└── examples/         # Optional: Concrete input/output reference cases
-```
-
 ---
 
-## 🧠 Included Skills Catalog
+## 🧠 Comprehensive Guide to the 8 Skills (How and When to Use)
 
-| Skill | Trigger / When Antigravity Activates | Core Capability |
+Read the [Detailed Skills Deep Dive](docs/07-skills-deep-dive.md) for full runbooks.
+
+| Skill | Name & Trigger | Core Action |
 | :--- | :--- | :--- |
-| **[`evidence-first`](skills/evidence-first/SKILL.md)** | Concluding any feature or bugfix | Runs typecheck, lint, tests, and build before declaring complete. |
-| **[`modular-350-refactor`](skills/modular-350-refactor/SKILL.md)** | Source files exceeding 350 lines | Decomposes code using the Facade pattern without breaking existing imports. |
-| **[`security-auditor`](skills/security-auditor/SKILL.md)** | Security reviews and PR audits | Scans for leaked secrets (`.env`), injection vectors, and trust boundaries. |
-| **[`subagent-review`](skills/subagent-review/SKILL.md)** | In-depth code review | Dispatches 3 parallel subagents (Architect, Security, QA) via `invoke_subagent`. |
-| **[`parallel-waves`](skills/parallel-waves/SKILL.md)** | Complex multi-tier features | Orchestrates ordered waves (DB -> Backend + Frontend in parallel -> Tests). |
-| **[`context7-docs`](skills/context7-docs/SKILL.md)** | API and framework documentation | Queries official, up-to-date documentation to eliminate hallucinated syntax. |
-| **[`chrome-devtools`](skills/chrome-devtools/SKILL.md)** | Frontend and UI inspection | Audits browser console errors, hydration mismatches, and network telemetry. |
-| **[`project-bootstrap`](skills/project-bootstrap/SKILL.md)** | Starting a project from scratch | Scaffolds a complete Next.js / TypeScript / Python stack from a 2-line prompt. |
+| **1. Evidence-First** | `evidence-first`<br>*(Concluding any task)* | **The Quality Guarantee**: Runs the verification pipeline in the background and attaches terminal proof of success to the final answer. |
+| **2. 350-Line Refactorer** | `modular-350-refactor`<br>*(Files > 350 lines)* | **The Clean Code Architect**: Splits monolithic files into focused submodules using the Facade pattern without breaking any existing imports. |
+| **3. Security Auditor** | `security-auditor`<br>*(Security reviews & PRs)* | **The Privacy & SecOps Inspector**: Read-only audit scanning for leaked API keys, `.env` files, SQL injection, and vulnerable dependencies (`npm audit`). |
+| **4. Multi-Agent Review** | `subagent-review`<br>*(Deep code review)* | **The Review Board**: Spawns 3 specialized subagents simultaneously (Architect, Security, QA) via `invoke_subagent` and synthesizes findings. |
+| **5. Parallel Waves** | `parallel-waves`<br>*(Large features)* | **The Construction Manager**: Structures work into sequential, collision-free waves (Wave 1: DB & Schemas $\rightarrow$ Wave 2: Backend + UI in parallel $\rightarrow$ Wave 3: Tests). |
+| **6. Context7 Docs** | `context7-docs`<br>*(Library & API questions)* | **The Up-to-Date Researcher**: Queries current official documentation matching the exact installed package version, preventing deprecated code. |
+| **7. Chrome DevTools** | `chrome-devtools`<br>*(Frontend & Web UI)* | **The Interface Tester**: Launches Chrome via MCP, inspects browser console errors (hydration mismatches), and tests failing network requests. |
+| **8. Project Bootstrap** | `project-bootstrap`<br>*(Starting from scratch)* | **The Instant Scaffolder**: Generates a production-ready Next.js / TypeScript or Python project from a 2-line prompt with full governance. |
 
 ---
 

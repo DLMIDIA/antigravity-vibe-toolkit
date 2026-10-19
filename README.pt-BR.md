@@ -57,13 +57,36 @@ Testa tipos, lint, limite de 350 linhas por arquivo, suites de teste e compilaç
 
 ---
 
+## 🛡️ O que é o `agy-vibe verify` (Quality Gates)? Eu preciso rodar isso?
+
+### Eu preciso rodar isso manualmente?
+**Não, você não é obrigado a rodar manualmente!** Você tem duas opções:
+
+1. **Totalmente Automático pelo Antigravity**: No chat, você só precisa dizer:
+   > *"Implemente essa tela e verifique se está tudo pronto com os Quality Gates."*
+   O próprio Antigravity aciona a skill `evidence-first`, roda o comando `agy-vibe verify` em segundo plano e já te responde com o relatório comprovando que tudo passou.
+2. **Manual no seu Terminal (quando quiser)**: Se você mesmo quiser conferir seu projeto antes de subir para o GitHub:
+   ```bash
+   cd /seu/projeto
+   agy-vibe verify
+   ```
+
+### As 5 Barreiras de Proteção do Quality Gate:
+1. **Teto Modular (<= 350 linhas)**: Garante que nenhum arquivo de código ficou gigante demais (arquivos grandes aumentam as chances de a IA alucinar).
+2. **Verificação de Tipos (Typecheck)**: Roda `npx tsc --noEmit` (TypeScript) ou compilador Python para garantir zero erros de tipos ou imports quebrados.
+3. **Linter de Código**: Roda `npm run lint` para garantir código limpo, sem variáveis não utilizadas ou código morto.
+4. **Testes Automatizados**: Roda a suíte de testes (`npm test` ou `pytest`) provando que nenhuma funcionalidade antiga foi quebrada.
+5. **Compilação de Produção (Build)**: Roda `npm run build` para garantir que o projeto compilará sem erros nos servidores de produção.
+
+---
+
 ## 🔬 Como Realmente Funciona o Sistema de Skills no Google Antigravity?
 
 <p align="center">
   <img src="assets/skills-architecture.svg" alt="Arquitetura do Sistema de Skills no Antigravity" width="100%" />
 </p>
 
-Diferente de sistemas que apenas colam prompts gigantescos no chat, o **Google Antigravity** possui uma arquitetura de extensão elegante baseada em três pilares:
+Diferente de sistemas que apenas colam prompts gigantescos no chat, o **Google Antigravity** possui uma arquitetura de extensão elegante:
 
 ### 1. Progressive Disclosure (Carregamento Sob Demanda)
 No início de cada conversa, o Antigravity **NÃO injeta o conteúdo completo das skills** na janela de contexto. Ele lê apenas o cabeçalho YAML (`name` e `description` — cerca de 30 tokens por skill).
@@ -77,36 +100,28 @@ O Antigravity descobre e prioriza as customizações na seguinte ordem:
 3. **`~/.gemini/antigravity/builtin/skills/` (Global da Máquina)**: Onde o nosso instalador registra as skills para funcionarem em todo o seu Mac.
 4. **Skills Nativas do Sistema**: Montadas por nome pelo Antigravity.
 
-### 3. Anatomia de uma Skill no Antigravity
-Cada skill dentro de `skills/<nome>/` segue o padrão canônico:
-```text
-skills/evidence-first/
-├── SKILL.md          # Obrigatório: Frontmatter YAML + Instruções passo a passo
-├── scripts/          # Opcional: Scripts executáveis (Python, Bash, Node)
-├── references/       # Opcional: Manuais detalhados que o agente consulta se precisar
-└── examples/         # Opcional: Casos de uso e formatos esperados
-```
-
 ---
 
-## 🧠 Catálogo de Skills Incluídas
+## 🧠 Guia Completo das 8 Skills (Como e Quando Usar)
 
-| Skill | Gatilho / Quando o Antigravity Ativa | O que faz na prática |
+Mais detalhes no [Guia Aprofundado de Skills](docs/07-skills-deep-dive.md).
+
+| Skill | Nome & Gatilho | O que faz na prática |
 | :--- | :--- | :--- |
-| **[`evidence-first`](skills/evidence-first/SKILL.md)** | Ao concluir qualquer implementação | Roda typecheck, lint, testes e build antes de dar o trabalho por pronto. |
-| **[`modular-350-refactor`](skills/modular-350-refactor/SKILL.md)** | Arquivos com mais de 350 linhas | Decompõe o código usando o padrão Facade sem quebrar imports externos. |
-| **[`security-auditor`](skills/security-auditor/SKILL.md)** | Revisões de segurança ou PRs | Varre vazamento de secrets (`.env`), injeções e valida fronteiras de dados. |
-| **[`subagent-review`](skills/subagent-review/SKILL.md)** | Code review profundo | Dispara 3 subagentes paralelos (Arquiteto, Segurança e QA) via `invoke_subagent`. |
-| **[`parallel-waves`](skills/parallel-waves/SKILL.md)** | Novas funcionalidades | Organiza o desenvolvimento em ondas (Banco -> Backend + UI em paralelo -> Testes). |
-| **[`context7-docs`](skills/context7-docs/SKILL.md)** | Dúvidas de bibliotecas/APIs | Busca APIs atualizadas de bibliotecas para eliminar código legado alucinado. |
-| **[`chrome-devtools`](skills/chrome-devtools/SKILL.md)** | Frontend e UI | Inspeciona erros de console, rede e layout no navegador via MCP. |
-| **[`project-bootstrap`](skills/project-bootstrap/SKILL.md)** | Novo projeto do zero | Cria um projeto Next.js/TypeScript/Python completo a partir de 2 linhas de prompt. |
+| **1. Evidence-First** | `evidence-first`<br>*(Ao finalizar qualquer tarefa)* | **O Selo de Garantia**: Roda a esteira de validação em segundo plano e anexa a prova com logs de sucesso na resposta final. |
+| **2. Refatorador 350 Linhas** | `modular-350-refactor`<br>*(Arquivos > 350 linhas)* | **O Arquiteto de Código Limpo**: Divide arquivos gigantescos em submódulos coesos usando o Facade Pattern, sem quebrar os imports do projeto. |
+| **3. Auditor de Segurança** | `security-auditor`<br>*(Revisões de segurança)* | **O Auditor de Privacidade**: Modo somente-leitura. Varre vazamento de chaves de API, senhas, SQL injection e vulnerabilidades em pacotes (`npm audit`). |
+| **4. Revisão Multi-Agente** | `subagent-review`<br>*(Code review profundo)* | **A Banca Examinadora**: Dispara 3 subagentes em paralelo (Arquiteto, Segurança e QA) via `invoke_subagent` e sintetiza um parecer único. |
+| **5. Ondas Paralelas** | `parallel-waves`<br>*(Grandes funcionalidades)* | **O Gerente de Obras**: Organiza o desenvolvimento em etapas sem colisão (Onda 1: Banco $\rightarrow$ Onda 2: Backend e UI em paralelo $\rightarrow$ Onda 3: Testes). |
+| **6. Context7 Docs** | `context7-docs`<br>*(Dúvidas de bibliotecas)* | **O Pesquisador de APIs**: Consulta a documentação oficial da versão exata instalada no seu projeto, evitando código depreciado ou alucinado. |
+| **7. Chrome DevTools** | `chrome-devtools`<br>*(Frontend e Telas)* | **O Testador de Interface**: Abre o site no Chrome via MCP, checa erros de hydration no console e testa chamadas de rede com falha. |
+| **8. Project Bootstrap** | `project-bootstrap`<br>*(Novo projeto do zero)* | **O Construtor Instantâneo**: Scaffolda um projeto completo (Next.js/TypeScript/Tailwind ou Python) a partir de 2 linhas de prompt com qualidade garantida. |
 
 ---
 
 ## 🛠️ Comandos do Utilitário `agy-vibe`
 
-O binário [`bin/agy-vibe`](bin/agy-vibe) é escrito em Node.js puro, sem `node_modules` adicionais:
+O binário [`bin/agy-vibe`](bin/agy-vibe) é escrito em Node.js puro, sem dependências adicionais:
 
 ```bash
 # Inicializa a base do Antigravity no projeto atual
