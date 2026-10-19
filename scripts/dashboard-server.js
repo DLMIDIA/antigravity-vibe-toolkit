@@ -3,7 +3,7 @@
 /**
  * Antigravity Vibe Monitor & Dashboard Server
  * Local web server tracking token economy, modular health, project compliance,
- * Obsidian-style memory vault, and Antigravity Skills.
+ * Obsidian-style memory vault, and live Antigravity Agent & Model Telemetry.
  *
  * Runs locally on port 4242 (or process.env.PORT) and inside Docker.
  */
@@ -28,7 +28,100 @@ const SEARCH_DIRS = [
   path.join(HOME, 'code'),
 ];
 
-// Helper: Scan directory for line limit compliance
+// ---------------------------------------------------------------------------
+// 1. LIVE ANTIGRAVITY TELEMETRY (Tokens, Model Tracking, Context Satiation)
+// ---------------------------------------------------------------------------
+function getAntigravityLiveTelemetry() {
+  const brainDir = path.join(HOME, '.gemini', 'antigravity', 'brain');
+  let latestConv = null;
+  let latestMtime = 0;
+
+  if (fs.existsSync(brainDir)) {
+    try {
+      const dirs = fs.readdirSync(brainDir);
+      for (const d of dirs) {
+        const tPath = path.join(brainDir, d, '.system_generated', 'logs', 'transcript.jsonl');
+        if (fs.existsSync(tPath)) {
+          const stat = fs.statSync(tPath);
+          if (stat.mtimeMs > latestMtime) {
+            latestMtime = stat.mtimeMs;
+            latestConv = { id: d, path: tPath };
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  let activeModel = 'Gemini 3.8 Flash (High)';
+  let contextTokens = 0;
+  let inputTokens = 0;
+  let cacheReadTokens = 0;
+  let outputTokens = 0;
+  let totalSteps = 0;
+  const contextLimit = 1000000; // 1M tokens limit for Gemini standard
+
+  if (latestConv && fs.existsSync(latestConv.path)) {
+    try {
+      const content = fs.readFileSync(latestConv.path, 'utf8');
+      const lines = content.trim().split('\n');
+      totalSteps = lines.length;
+
+      for (const line of lines) {
+        try {
+          const d = JSON.parse(line);
+          if (d.type === 'USER_INPUT' && d.content && d.content.includes('Model Selection` from')) {
+            const m = d.content.match(/Model Selection\` from .*? to (.*?)\.\s*No need/);
+            if (m && m[1]) activeModel = m[1].trim();
+          }
+          if (d.input_tokens !== undefined) {
+            inputTokens += d.input_tokens;
+            cacheReadTokens += (d.cache_read_tokens || 0);
+            outputTokens += (d.output_tokens || 0);
+            contextTokens = d.input_tokens + (d.cache_read_tokens || 0);
+          }
+        } catch (err) {}
+      }
+    } catch (e) {}
+  }
+
+  const contextPctNum = parseFloat(((contextTokens / contextLimit) * 100).toFixed(1));
+  const remainingTokens = Math.max(0, contextLimit - contextTokens);
+
+  let alertLevel = 'NORMAL';
+  let alertMessage = 'Contexto Saudável: Ampla capacidade livre para raciocínio e execução.';
+  let alertColor = '#10b981';
+
+  if (contextPctNum >= 80) {
+    alertLevel = 'CRITICAL';
+    alertMessage = '⚠️ ALERTA DE CONTEXTO: Janela acima de 80%! Recomendado usar /compact para resumir e liberar tokens.';
+    alertColor = '#ef4444';
+  } else if (contextPctNum >= 60) {
+    alertLevel = 'WARNING';
+    alertMessage = 'Atenção ao Contexto: Mais de 60% da janela ocupada. Considere usar /compact em breve.';
+    alertColor = '#f59e0b';
+  }
+
+  return {
+    conversationId: latestConv ? latestConv.id : 'N/A',
+    activeModel,
+    contextTokens,
+    contextLimit,
+    contextPct: contextPctNum,
+    remainingTokens,
+    alertLevel,
+    alertMessage,
+    alertColor,
+    inputTokens,
+    cacheReadTokens,
+    outputTokens,
+    totalSteps,
+    cacheSavingsMultiplier: cacheReadTokens > 0 ? (cacheReadTokens / Math.max(1, inputTokens)).toFixed(1) : '1.0'
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 2. PROJECT AUDITING & SCANNING
+// ---------------------------------------------------------------------------
 function scanProjectFiles(dir, maxLines = 350) {
   const ignore = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'brain', '__pycache__', '.venv']);
   const exts = new Set(['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.php', '.vue']);
@@ -75,7 +168,6 @@ function scanProjectFiles(dir, maxLines = 350) {
   return { totalFiles, compliantFiles, totalLines, oversized };
 }
 
-// Helper: Compute compliance score (0-8)
 function getProjectCompliance(dir) {
   const checks = [
     'PRODUCT.md',
@@ -94,12 +186,10 @@ function getProjectCompliance(dir) {
   return score;
 }
 
-// Discover projects
 function discoverProjects() {
   const projects = [];
   const visited = new Set();
 
-  // Always include toolkit itself
   const toolkitPath = PKG_ROOT;
   visited.add(toolkitPath);
   projects.push(createProjectSummary('antigravity-vibe-toolkit', toolkitPath));
@@ -118,7 +208,6 @@ function discoverProjects() {
         const pPath = path.join(parent, ent.name);
         if (visited.has(pPath)) continue;
 
-        // Check if it's a project (has package.json, requirements, git, or AGENTS.md)
         if (
           fs.existsSync(path.join(pPath, 'package.json')) ||
           fs.existsSync(path.join(pPath, '.git')) ||
@@ -140,12 +229,9 @@ function createProjectSummary(name, pPath) {
   const compliance = getProjectCompliance(pPath);
   const { totalFiles, compliantFiles, totalLines, oversized } = scanProjectFiles(pPath);
 
-  // Token savings estimation:
-  // An average full-file reload consumes 4 tokens/line * 10 interactions.
-  // Modularity saves tokens by avoiding reloading bulky bloated files.
   const excessLines = oversized.reduce((acc, f) => acc + (f.lines - 350), 0);
   const tokensSaved = Math.max(0, (compliantFiles * 850) - (excessLines * 4));
-  const estimatedCostSaved = (tokensSaved / 1000000) * 1.5; // ~$1.50 per 1M blended input/output tokens
+  const estimatedCostSaved = (tokensSaved / 1000000) * 1.5;
 
   return {
     name,
@@ -161,7 +247,6 @@ function createProjectSummary(name, pPath) {
   };
 }
 
-// Get metadata for the 8 skills
 function getSkillsData() {
   const skillsDir = path.join(PKG_ROOT, 'skills');
   if (!fs.existsSync(skillsDir)) return [];
@@ -195,7 +280,6 @@ function getSkillsData() {
   });
 }
 
-// Get Obsidian-style Memory Notes
 function getMemoryVault() {
   const notes = [];
   const projectDocs = [
@@ -222,14 +306,16 @@ function getMemoryVault() {
   return notes;
 }
 
-// Generate the Single Page Application HTML
+// ---------------------------------------------------------------------------
+// 3. FRONTEND SINGLE PAGE APPLICATION
+// ---------------------------------------------------------------------------
 function renderHTML() {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Antigravity Vibe Monitor & Dashboard</title>
+  <title>Antigravity Vibe Monitor & Live Telemetry</title>
   <style>
     :root {
       --bg: #090d16;
@@ -254,7 +340,7 @@ function renderHTML() {
     header {
       background: linear-gradient(180deg, #131c2e 0%, rgba(19, 28, 46, 0.4) 100%);
       border-bottom: 1px solid var(--card-border);
-      padding: 20px 32px;
+      padding: 18px 32px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -265,11 +351,11 @@ function renderHTML() {
     }
     .logo-box { display: flex; align-items: center; gap: 14px; }
     .logo-core {
-      width: 38px; height: 38px; border-radius: 10px;
+      width: 40px; height: 40px; border-radius: 10px;
       background: linear-gradient(135deg, var(--cyan), var(--purple));
       display: flex; align-items: center; justify-content: center;
-      font-weight: 900; font-size: 20px; color: #fff;
-      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+      font-weight: 900; font-size: 22px; color: #fff;
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.4);
     }
     .logo-title h1 { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
     .logo-title p { font-size: 12px; color: var(--text-dim); }
@@ -286,7 +372,60 @@ function renderHTML() {
       box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
     }
 
-    .container { max-width: 1240px; margin: 32px auto; padding: 0 24px; }
+    .container { max-width: 1240px; margin: 28px auto; padding: 0 24px; }
+
+    /* Live Telemetry Banner */
+    .telemetry-card {
+      background: linear-gradient(135deg, #131c2e 0%, #0d1527 100%);
+      border: 1px solid #2b3954; border-radius: 16px;
+      padding: 24px; margin-bottom: 28px; position: relative; overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .telemetry-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+    }
+    .telemetry-model-box { display: flex; align-items: center; gap: 12px; }
+    .model-badge {
+      background: rgba(6, 182, 212, 0.15); border: 1px solid var(--cyan);
+      color: #38bdf8; padding: 6px 14px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #34d399;
+      box-shadow: 0 0 10px #34d399; animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    .alert-banner {
+      padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 100%; height: 12px; background: #0b0f19; border-radius: 999px;
+      overflow: hidden; margin: 10px 0; border: 1px solid #1f293d;
+    }
+    .progress-fill {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      transition: width 0.5s ease-in-out;
+    }
+
+    .telemetry-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-top: 20px;
+    }
+    .telemetry-stat {
+      background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 14px; text-align: left;
+    }
+    .telemetry-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .telemetry-stat-val { font-size: 20px; font-weight: 800; color: #fff; }
 
     /* Metric Cards */
     .grid-metrics {
@@ -355,9 +494,6 @@ function renderHTML() {
       position: relative; overflow: hidden;
     }
     .skill-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .skill-thumb-placeholder {
-      font-size: 32px; color: var(--cyan); opacity: 0.6;
-    }
     .skill-info { padding: 18px; flex: 1; display: flex; flex-direction: column; }
     .skill-info h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
     .skill-info p { font-size: 12px; color: var(--text-dim); line-height: 1.4; flex: 1; }
@@ -396,6 +532,14 @@ function renderHTML() {
       font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
     }
     .btn-run:hover { opacity: 0.9; }
+
+    /* Explainer Box */
+    .explainer-box {
+      background: #101726; border: 1px solid #1e293b; border-radius: 14px;
+      padding: 24px; margin-top: 32px;
+    }
+    .explainer-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--cyan); }
+    .explainer-box p { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -405,7 +549,7 @@ function renderHTML() {
       <div class="logo-core">⚡</div>
       <div class="logo-title">
         <h1>Antigravity Vibe Monitor</h1>
-        <p>Token Economy &amp; Multi-Project Quality Dashboard</p>
+        <p>Live Token Telemetry &amp; Multi-Project Quality Dashboard</p>
       </div>
     </div>
     <div class="nav-tabs">
@@ -421,6 +565,63 @@ function renderHTML() {
 
     <!-- TAB 1: OVERVIEW -->
     <div id="tab-overview" class="tab-content active">
+
+      <!-- LIVE ANTIGRAVITY TELEMETRY CARD -->
+      <div class="telemetry-card">
+        <div class="telemetry-header">
+          <div class="telemetry-model-box">
+            <span class="pulse-dot"></span>
+            <div style="font-size:14px; font-weight:700; color:#fff;">Sessão Ativa do Google Antigravity</div>
+            <div class="model-badge" id="telemetry-model">🤖 Carregando modelo...</div>
+          </div>
+          <div id="telemetry-conv-id" style="font-family:monospace; font-size:11px; color:var(--text-dim);"></div>
+        </div>
+
+        <div id="telemetry-alert-box" class="alert-banner" style="background: rgba(16, 185, 129, 0.12); color:#34d399; border:1px solid rgba(16, 185, 129, 0.3);">
+          <span>🟢</span>
+          <span id="telemetry-alert-text">Monitorando consumo de contexto...</span>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+            <span style="font-weight:700; color:var(--text-dim);">Ocupação da Janela de Contexto (Tokens Ativos)</span>
+            <span id="telemetry-pct-label" style="font-weight:800; color:#fff;">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="telemetry-progress-fill"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-top:4px;">
+            <span>0</span>
+            <span id="telemetry-context-stats">0 / 1.000.000 tokens</span>
+            <span>1.0M Max</span>
+          </div>
+        </div>
+
+        <div class="telemetry-grid">
+          <div class="telemetry-stat">
+            <div class="telemetry-stat-label">Tokens Reaproveitados (Cache)</div>
+            <div class="telemetry-stat-val" id="telemetry-cache" style="color:#38bdf8;">0</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Prompt Caching do Gemini</div>
+          </div>
+          <div class="telemetry-stat">
+            <div class="telemetry-stat-label">Tokens de Entrada (Input)</div>
+            <div class="telemetry-stat-val" id="telemetry-input">0</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Novas mensagens e dados</div>
+          </div>
+          <div class="telemetry-stat">
+            <div class="telemetry-stat-label">Tokens Gerados (Output)</div>
+            <div class="telemetry-stat-val" id="telemetry-output">0</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Respostas e comandos</div>
+          </div>
+          <div class="telemetry-stat">
+            <div class="telemetry-stat-label">Passos da Conversa</div>
+            <div class="telemetry-stat-val" id="telemetry-steps" style="color:#c084fc;">0</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Turnos e chamadas de ferramenta</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METRICS GRID -->
       <div class="grid-metrics">
         <div class="metric-card metric-cyan">
           <div class="metric-label">Economia Estimada de Tokens</div>
@@ -464,6 +665,15 @@ function renderHTML() {
             <tr><td colspan="7" style="text-align:center; padding:24px;">Carregando projetos...</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- EXPLAINER BOX -->
+      <div class="explainer-box">
+        <h3>🔍 Como o Monitor Rastreia os Modelos e os Tokens do Antigravity?</h3>
+        <p><strong>1. Rastreamento em Tempo Real dos Logs:</strong> O Antigravity armazena cada turno de pensamento, execução e contagem de tokens no diretório local <code>~/.gemini/antigravity/brain/&lt;conversation-id&gt;/.system_generated/logs/transcript.jsonl</code>. Nosso monitor lê esse arquivo diretamente no disco e extrai os campos exatos de <code>input_tokens</code>, <code>cache_read_tokens</code> e <code>output_tokens</code>.</p>
+        <p><strong>2. Detecção do Modelo Ativo:</strong> Quando você altera o modelo no Antigravity (ex: de <em>Gemini 4 Argon</em> para <em>Gemini 3.8 Flash (High)</em>), o evento <code>&lt;USER_SETTINGS_CHANGE&gt;</code> é registrado. O monitor captura essa mudança instantaneamente e atualiza o badge no topo.</p>
+        <p><strong>3. Sistema de Alerta de Saturação:</strong> Modelos modernos possuem janelas massivas (1.000.000 tokens), mas conversas muito longas aumentam a latência e o custo. O monitor calcula a porcentagem utilizada: se passar de <strong>60%</strong> emite um aviso amarelo, e se passar de <strong>80%</strong> emite um alerta vermelho recomendando o uso do comando slash <code>/compact</code>.</p>
+        <p><strong>4. Eficiência de Prompt Caching:</strong> O Google Antigravity reutiliza o cache do contexto em cada turno. No gráfico acima, veja como o número de <em>Tokens Reaproveitados</em> ultrapassa os milhões, custando apenas uma fração mínima em relação a enviar o contexto do zero toda vez.</p>
       </div>
     </div>
 
@@ -534,20 +744,62 @@ function renderHTML() {
 
     async function loadAllData() {
       try {
-        const [statsRes, projectsRes, skillsRes, memoryRes] = await Promise.all([
+        const [statsRes, projectsRes, skillsRes, memoryRes, liveRes] = await Promise.all([
           fetch('/api/stats').then(r => r.json()),
           fetch('/api/projects').then(r => r.json()),
           fetch('/api/skills').then(r => r.json()),
-          fetch('/api/memory').then(r => r.json())
+          fetch('/api/memory').then(r => r.json()),
+          fetch('/api/antigravity/live').then(r => r.json())
         ]);
 
-        // 1. Stats
+        // 1. Live Antigravity Telemetry
+        document.getElementById('telemetry-model').innerText = '🤖 ' + liveRes.activeModel;
+        document.getElementById('telemetry-conv-id').innerText = 'Sessão: ' + liveRes.conversationId.slice(0, 8) + '...';
+        
+        // Progress bar
+        const fill = document.getElementById('telemetry-progress-fill');
+        fill.style.width = Math.min(100, liveRes.contextPct) + '%';
+        if (liveRes.alertLevel === 'CRITICAL') {
+          fill.style.background = 'linear-gradient(90deg, #f59e0b, #ef4444)';
+        } else if (liveRes.alertLevel === 'WARNING') {
+          fill.style.background = 'linear-gradient(90deg, #06b6d4, #f59e0b)';
+        } else {
+          fill.style.background = 'linear-gradient(90deg, #06b6d4, #8b5cf6)';
+        }
+
+        document.getElementById('telemetry-pct-label').innerText = liveRes.contextPct + '% (' + liveRes.contextTokens.toLocaleString() + ' tokens)';
+        document.getElementById('telemetry-context-stats').innerText = liveRes.contextTokens.toLocaleString() + ' / ' + liveRes.contextLimit.toLocaleString() + ' tokens (' + liveRes.remainingTokens.toLocaleString() + ' livres)';
+        
+        // Alert box
+        const alertBox = document.getElementById('telemetry-alert-box');
+        const alertText = document.getElementById('telemetry-alert-text');
+        alertText.innerText = liveRes.alertMessage;
+        if (liveRes.alertLevel === 'CRITICAL') {
+          alertBox.style.background = 'rgba(239, 68, 68, 0.15)';
+          alertBox.style.color = '#f87171';
+          alertBox.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+        } else if (liveRes.alertLevel === 'WARNING') {
+          alertBox.style.background = 'rgba(245, 158, 11, 0.15)';
+          alertBox.style.color = '#fbbf24';
+          alertBox.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+        } else {
+          alertBox.style.background = 'rgba(16, 185, 129, 0.12)';
+          alertBox.style.color = '#34d399';
+          alertBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        }
+
+        document.getElementById('telemetry-cache').innerText = (liveRes.cacheReadTokens || 0).toLocaleString();
+        document.getElementById('telemetry-input').innerText = (liveRes.inputTokens || 0).toLocaleString();
+        document.getElementById('telemetry-output').innerText = (liveRes.outputTokens || 0).toLocaleString();
+        document.getElementById('telemetry-steps').innerText = liveRes.totalSteps;
+
+        // 2. Stats
         document.getElementById('metric-tokens').innerText = (statsRes.totalTokensSaved || 0).toLocaleString() + ' tokens';
         document.getElementById('metric-modular').innerText = statsRes.totalCompliantFiles + ' / ' + statsRes.totalFiles;
         document.getElementById('metric-cost').innerText = '$' + (statsRes.totalCostSaved || '0.00');
         document.getElementById('metric-skills').innerText = skillsRes.length;
 
-        // 2. Overview Table
+        // 3. Overview Table
         const tbOverview = document.getElementById('overview-table-body');
         tbOverview.innerHTML = '';
         projectsRes.forEach(p => {
@@ -566,7 +818,7 @@ function renderHTML() {
           tbOverview.appendChild(row);
         });
 
-        // 3. Projects Table
+        // 4. Projects Table
         const tbProjects = document.getElementById('projects-table-body');
         tbProjects.innerHTML = '';
         projectsRes.forEach(p => {
@@ -581,7 +833,7 @@ function renderHTML() {
           tbProjects.appendChild(row);
         });
 
-        // 4. Memory Notes
+        // 5. Memory Notes
         vaultNotes = memoryRes;
         const listEl = document.getElementById('memory-list');
         listEl.innerHTML = '';
@@ -596,7 +848,7 @@ function renderHTML() {
           selectNote(0);
         }
 
-        // 5. Skills
+        // 6. Skills
         const skillsEl = document.getElementById('skills-grid');
         skillsEl.innerHTML = '';
         skillsRes.forEach(s => {
@@ -648,15 +900,17 @@ function renderHTML() {
       }
     }
 
-    // Initial load
+    // Auto refresh every 5 seconds for live telemetry!
     loadAllData();
-    setInterval(loadAllData, 15000);
+    setInterval(loadAllData, 5000);
   </script>
 </body>
 </html>`;
 }
 
-// Request Handler
+// ---------------------------------------------------------------------------
+// 4. SERVER ROUTING & API ENDPOINTS
+// ---------------------------------------------------------------------------
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
@@ -678,7 +932,15 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // API Endpoints
+  // API: Live Antigravity Telemetry
+  if (pathname === '/api/antigravity/live') {
+    const liveData = getAntigravityLiveTelemetry();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(liveData));
+    return;
+  }
+
+  // API: General Stats
   if (pathname === '/api/stats') {
     const projects = discoverProjects();
     const totalFiles = projects.reduce((a, b) => a + b.totalFiles, 0);
@@ -691,6 +953,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Projects List
   if (pathname === '/api/projects') {
     const projects = discoverProjects();
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -698,6 +961,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Skills Metadata
   if (pathname === '/api/skills') {
     const skills = getSkillsData();
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -705,6 +969,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Memory Vault Notes
   if (pathname === '/api/memory') {
     const notes = getMemoryVault();
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -712,6 +977,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Run Quality Gate Verification
   if (pathname === '/api/verify' && req.method === 'POST') {
     try {
       const output = execSync(`"${path.join(PKG_ROOT, 'bin', 'agy-vibe')}" verify "${PKG_ROOT}"`, {
