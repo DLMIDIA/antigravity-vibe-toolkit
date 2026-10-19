@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="blue-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <linearGradient id="emerald-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <linearGradient id="violet-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="460" rx="16" fill="url(#bg2)" stroke="#1f2937" stroke-width="2"/>
+
+  <!-- Title & Subtitle -->
+  <text x="500" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="700" fill="#f9fafb" text-anchor="middle">Fluxo de Instalação e Ativação no Mac &amp; Projetos</text>
+  <text x="500" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#9ca3af" text-anchor="middle">Da Instalação Global de 1 Clique até a Proteção Automática dos seus Repositórios</text>
+
+  <!-- Step 1 -->
+  <g transform="translate(45, 100)">
+    <rect width="280" height="310" rx="12" fill="#131c2e" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="280" height="40" rx="12" fill="url(#blue-grad)"/>
+    <rect y="28" width="280" height="12" fill="#131c2e"/>
+    <text x="140" y="26" font-family="sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">PASSO 1: INSTALAÇÃO GLOBAL</text>
+
+    <g transform="translate(16, 55)">
+      <rect width="248" height="50" rx="6" fill="#030712" stroke="#1f2937" stroke-width="1"/>
+      <text x="12" y="30" font-family="monospace" font-size="11" fill="#38bdf8">./scripts/install-global.sh</text>
+    </g>
+
+    <text x="140" y="135" font-family="sans-serif" font-size="12" font-weight="700" fill="#f8fafc" text-anchor="middle">O que acontece no seu Mac:</text>
+
+    <g transform="translate(16, 150)">
+      <circle cx="10" cy="12" r="4" fill="#38bdf8"/>
+      <text x="22" y="16" font-family="sans-serif" font-size="11" fill="#cbd5e1">Symlink do CLI <tspan font-family="monospace" fill="#38bdf8">agy-vibe</tspan> em</text>
+      <text x="22" y="32" font-family="monospace" font-size="10" fill="#94a3b8">~/.local/bin ou /usr/local/bin</text>
+
+      <circle cx="10" cy="58" r="4" fill="#38bdf8"/>
+      <text x="22" y="62" font-family="sans-serif" font-size="11" fill="#cbd5e1">Copia 8 Skills para o diretório</text>
+      <text x="22" y="78" font-family="monospace" font-size="9" fill="#94a3b8">~/.gemini/antigravity/builtin/skills/</text>
+
+      <circle cx="10" cy="104" r="4" fill="#34d399"/>
+      <text x="22" y="108" font-family="sans-serif" font-size="11" fill="#34d399">Disponível em todas as sessões!</text>
+    </g>
+  </g>
+
+  <!-- Flow 1 -> 2 -->
+  <path d="M 335 255 L 365 255" stroke="#38bdf8" stroke-width="3" stroke-dasharray="4,4"/>
+  <polygon points="365,250 375,255 365,260" fill="#38bdf8"/>
+
+  <!-- Step 2 -->
+  <g transform="translate(375, 100)">
+    <rect width="280" height="310" rx="12" fill="#131c2e" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="280" height="40" rx="12" fill="url(#violet-grad)"/>
+    <rect y="28" width="280" height="12" fill="#131c2e"/>
+    <text x="140" y="26" font-family="sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">PASSO 2: INICIALIZAR PROJETO</text>
+
+    <g transform="translate(16, 55)">
+      <rect width="248" height="50" rx="6" fill="#030712" stroke="#1f2937" stroke-width="1"/>
+      <text x="12" y="30" font-family="monospace" font-size="12" fill="#c084fc">agy-vibe init .</text>
+    </g>
+
+    <text x="140" y="135" font-family="sans-serif" font-size="12" font-weight="700" fill="#f8fafc" text-anchor="middle">Gera a fundação canônica:</text>
+
+    <g transform="translate(16, 150)">
+      <rect width="248" height="125" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+      <text x="12" y="22" font-family="monospace" font-size="11" fill="#fbbf24">📄 PRODUCT.md <tspan fill="#94a3b8">(Escopo &amp; MVP)</tspan></text>
+      <text x="12" y="44" font-family="monospace" font-size="11" fill="#38bdf8">📄 AGENTS.md <tspan fill="#94a3b8">(Instruções)</tspan></text>
+      <text x="12" y="66" font-family="monospace" font-size="11" fill="#a78bfa">📄 GEMINI.md <tspan fill="#94a3b8">(Regras Workspace)</tspan></text>
+      <text x="12" y="88" font-family="monospace" font-size="11" fill="#f472b6">📁 docs/ <tspan fill="#94a3b8">(architecture, quality)</tspan></text>
+      <text x="12" y="110" font-family="monospace" font-size="11" fill="#34d399">📁 .agents/rules/ <tspan fill="#94a3b8">(350 linhas, QA)</tspan></text>
+    </g>
+  </g>
+
+  <!-- Flow 2 -> 3 -->
+  <path d="M 665 255 L 695 255" stroke="#34d399" stroke-width="3" stroke-dasharray="4,4"/>
+  <polygon points="695,250 705,255 695,260" fill="#34d399"/>
+
+  <!-- Step 3 -->
+  <g transform="translate(705, 100)">
+    <rect width="250" height="310" rx="12" fill="#131c2e" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="250" height="40" rx="12" fill="url(#emerald-grad)"/>
+    <rect y="28" width="250" height="12" fill="#131c2e"/>
+    <text x="125" y="26" font-family="sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">PASSO 3: EVIDENCE-FIRST</text>
+
+    <g transform="translate(16, 55)">
+      <rect width="218" height="50" rx="6" fill="#030712" stroke="#1f2937" stroke-width="1"/>
+      <text x="12" y="30" font-family="monospace" font-size="12" fill="#34d399">agy-vibe verify</text>
+    </g>
+
+    <text x="125" y="135" font-family="sans-serif" font-size="12" font-weight="700" fill="#f8fafc" text-anchor="middle">Pipeline de Qualidade:</text>
+
+    <g transform="translate(16, 150)">
+      <text x="6" y="20" font-family="sans-serif" font-size="11" fill="#34d399">✔ Varredura &lt;= 350 linhas</text>
+      <text x="6" y="44" font-family="sans-serif" font-size="11" fill="#34d399">✔ TypeScript / Python check</text>
+      <text x="6" y="68" font-family="sans-serif" font-size="11" fill="#34d399">✔ ESLint / Biome / Linter</text>
+      <text x="6" y="92" font-family="sans-serif" font-size="11" fill="#34d399">✔ Suíte de Testes Automatizados</text>
+      <text x="6" y="116" font-family="sans-serif" font-size="11" fill="#34d399">✔ Compilação de Produção</text>
+    </g>
+  </g>
+</svg>

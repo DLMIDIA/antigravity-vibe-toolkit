@@ -1,136 +1,140 @@
+<p align="center">
+  <img src="assets/hero-banner.png" alt="Antigravity Vibe Toolkit — Google Antigravity Edition" width="100%" />
+</p>
+
 # Antigravity Vibe Toolkit 🚀
 
+[English](README.md) · **Português (Brasil)**
+
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Google Antigravity Ready](https://img.shields.io/badge/Google%20Antigravity-Native-4285F4.svg)](https://deepmind.google)
+[![Google Antigravity Ready](https://img.shields.io/badge/Google%20Antigravity-Native%20Skills-4285F4.svg)](https://deepmind.google)
 [![Architecture: Subagents & MCP](https://img.shields.io/badge/Architecture-Subagents%20%26%20MCP-green.svg)](docs/03-subagent-orchestration.md)
 [![Quality: Evidence--First](https://img.shields.io/badge/Quality-Evidence--First-orange.svg)](docs/02-evidence-first.md)
 
-**A esteira definitiva de engenharia de software e qualidade autônoma para o Google Antigravity.**
+**A esteira definitiva de engenharia de software autônoma, orquestração de subagentes e quality gates para o Google Antigravity.**
 
-Inspirado no trabalho de [Matheus Gomes (vibe-coding-toolkit)](https://github.com/soumatheusgomes/vibe-coding-toolkit), este toolkit foi **re-arquitetado e expandido especificamente para o Google Antigravity (DeepMind)**. Ele traz um conjunto integrado de **regras de qualidade (Quality Gates), orquestração de subagentes em ondas paralelas, catálogo de Skills nativas (`SKILL.md`) e um utilitário de linha de comando (`agy-vibe`)** para transformar qualquer projeto em uma máquina de alta produtividade sem alucinações.
+Inspirado e construído a partir da curadoria original do [vibe-coding-toolkit de Matheus Gomes](https://github.com/soumatheusgomes/vibe-coding-toolkit), este projeto é uma **edição especializada e expandida para o ecossistema do Google Antigravity (Google DeepMind)**. Ele reúne:
+* **8 Skills Nativas (`SKILL.md`)** com descoberta progressiva (*Progressive Disclosure*).
+* **Esteira Evidence-First**: Nunca aceite "parece pronto" sem prova de compilação, tipos, lint e testes.
+* **Orquestração de Subagentes em Ondas Paralelas** com bloqueio de concorrência por arquivo.
+* **Utilitário CLI (`agy-vibe`)** de zero dependências para automação e validação no Mac/Linux.
 
 ---
 
-## ⚡ Início Rápido (30 Segundos)
+## ⚡ Instalação e Início Rápido
 
-### 1. Instalar globalmente no seu Mac / Linux
-No terminal, entre na pasta do toolkit e rode o instalador:
+<p align="center">
+  <img src="assets/installation-flow.svg" alt="Fluxo de Instalação e Ativação" width="100%" />
+</p>
+
+### 1. Instalação Global de 1 Clique (Mac / Linux)
+Abra o seu terminal na pasta do repositório clonado e execute:
 ```bash
 ./scripts/install-global.sh
 ```
-Isso faz duas coisas automaticamente:
-1. Registra o comando `agy-vibe` no seu terminal.
-2. Copia todas as Skills para `~/.gemini/antigravity/builtin/skills/` tornando-as **ativas imediatamente no Google Antigravity**.
 
-### 2. Inicializar um projeto com a base Antigravity
-Dentro de qualquer projeto seu:
+#### O que esse instalador faz por baixo dos panos?
+1. **Registra o CLI `agy-vibe`**: Cria um symlink em `~/.local/bin/agy-vibe` (ou `/usr/local/bin/agy-vibe`), tornando o comando acessível em qualquer terminal do seu computador.
+2. **Instala as Skills no Antigravity**: Copia todas as 8 skills para o diretório interno do Antigravity em `~/.gemini/antigravity/builtin/skills/`.
+3. **Ativação Imediata**: O Google Antigravity reconhece as skills automaticamente em todas as suas sessões e projetos, sem precisar reiniciar o sistema!
+
+### 2. Inicializar a Base em Qualquer Projeto
+Entre na raiz de qualquer projeto novo ou existente e rode:
 ```bash
 agy-vibe init .
 ```
-Isso cria instantaneamente a estrutura canônica:
+Isso gera a fundação canônica:
 * `PRODUCT.md`: Escopo, MVP e critérios de aceite.
 * `AGENTS.md` e `GEMINI.md`: Regras de conduta do agente.
 * `docs/`: Arquitetura, qualidade, setup e onboarding.
 * `.agents/rules/`: Regras de Evidence-First, teto de 350 linhas e subagentes.
 
-### 3. Rodar as verificações de qualidade com evidência
+### 3. Rodar a Esteira de Qualidade (Evidence-First)
 ```bash
 agy-vibe verify
 ```
-Testa tipos, lint, limite de linhas, suites de teste e compilação de produção, gerando um relatório em Markdown com prova de execução!
+Testa tipos, lint, limite de 350 linhas por arquivo, suites de teste e compilação de produção, gerando um relatório em Markdown com prova de execução!
 
 ---
 
-## 🎯 Por que usar este Toolkit no Google Antigravity?
+## 🔬 Como Realmente Funciona o Sistema de Skills no Google Antigravity?
 
-O Google Antigravity é um dos ambientes de programação por agentes mais poderosos do mundo, contando com:
-* **Janela de contexto massiva** e raciocínio profundo (Gemini 1.5 Pro / Flash).
-* **Execução nativa de terminal persistente** e ferramentas de browser.
-* **Orquestração nativa de subagentes** (`invoke_subagent`, `manage_subagents`).
-* **Descoberta progressiva de Skills** (`SKILL.md`).
+<p align="center">
+  <img src="assets/skills-architecture.svg" alt="Arquitetura do Sistema de Skills no Antigravity" width="100%" />
+</p>
 
-Este toolkit aproveita 100% dessas capacidades e adiciona três pilares cruciais:
+Diferente de sistemas que apenas colam prompts gigantescos no chat, o **Google Antigravity** possui uma arquitetura de extensão elegante baseada em três pilares:
 
-```mermaid
-flowchart LR
-    A["1. Manifesto Documental\n(PRODUCT.md + AGENTS.md)"] --> B["2. Regra das 350 Linhas\n(Alta coesão, zero bloat)"]
-    B --> C["3. Evidence-First\n(Compilar, testar e provar)"]
-    C --> D["4. Subagentes em Ondas\n(Zero colisão de escrita)"]
+### 1. Progressive Disclosure (Carregamento Sob Demanda)
+No início de cada conversa, o Antigravity **NÃO injeta o conteúdo completo das skills** na janela de contexto. Ele lê apenas o cabeçalho YAML (`name` e `description` — cerca de 30 tokens por skill).
+* **Zero poluição de contexto**: Mais de 90% da janela de contexto fica 100% livre para o seu código e para o raciocínio do modelo.
+* **Ativação Dinâmica**: O agente só carrega o arquivo `SKILL.md` integral se a sua tarefa exigir explicitamente aquele procedimento (ex: *"Audite a segurança desse código"* ativa `security-auditor`).
+
+### 2. Hierarquia de Precedência e Resolução
+O Antigravity descobre e prioriza as customizações na seguinte ordem:
+1. **`.agents/skills/` (Workspace Local)**: Prioridade máxima. Permite que um projeto específico sobrescreva uma skill com regras próprias do repositório.
+2. **`skills.json`**: Registros declarados explicitamente no workspace.
+3. **`~/.gemini/antigravity/builtin/skills/` (Global da Máquina)**: Onde o nosso instalador registra as skills para funcionarem em todo o seu Mac.
+4. **Skills Nativas do Sistema**: Montadas por nome pelo Antigravity.
+
+### 3. Anatomia de uma Skill no Antigravity
+Cada skill dentro de `skills/<nome>/` segue o padrão canônico:
+```text
+skills/evidence-first/
+├── SKILL.md          # Obrigatório: Frontmatter YAML + Instruções passo a passo
+├── scripts/          # Opcional: Scripts executáveis (Python, Bash, Node)
+├── references/       # Opcional: Manuais detalhados que o agente consulta se precisar
+└── examples/         # Opcional: Casos de uso e formatos esperados
 ```
 
 ---
 
-## 🧠 Catálogo de Skills Nativas (`skills/`)
+## 🧠 Catálogo de Skills Incluídas
 
-Cada pasta contém um arquivo `SKILL.md` padronizado para o Antigravity com carregamento progressivo sob demanda:
-
-| Skill | Gatilho / Quando usar | O que faz |
+| Skill | Gatilho / Quando o Antigravity Ativa | O que faz na prática |
 | :--- | :--- | :--- |
-| **`evidence-first`** | Ao finalizar qualquer tarefa | Roda typecheck, lint, testes e build antes de dar o trabalho por pronto. |
-| **`modular-350-refactor`** | Arquivos longos (>350 linhas) | Decompõe o código usando o padrão Facade sem quebrar imports existentes. |
-| **`security-auditor`** | Revisão de segurança | Varre vazamento de secrets (`.env`), injeções e valida fronteiras de dados. |
-| **`subagent-review`** | Code review complexo | Dispara 3 subagentes paralelos (Arquiteto, Segurança e QA) via `invoke_subagent`. |
-| **`parallel-waves`** | Novas funcionalidades | Organiza o desenvolvimento em ondas (Banco -> Backend + UI em paralelo -> Testes). |
-| **`context7-docs`** | Consulta de documentação | Busca APIs atualizadas de bibliotecas para eliminar código legado alucinado. |
-| **`chrome-devtools`** | Frontend e UI | Inspeciona erros de console, rede e layout no navegador via MCP. |
-| **`project-bootstrap`** | Novo projeto do zero | Cria um projeto Next.js/TypeScript/Python completo a partir de 2 linhas de prompt. |
+| **[`evidence-first`](skills/evidence-first/SKILL.md)** | Ao concluir qualquer implementação | Roda typecheck, lint, testes e build antes de dar o trabalho por pronto. |
+| **[`modular-350-refactor`](skills/modular-350-refactor/SKILL.md)** | Arquivos com mais de 350 linhas | Decompõe o código usando o padrão Facade sem quebrar imports externos. |
+| **[`security-auditor`](skills/security-auditor/SKILL.md)** | Revisões de segurança ou PRs | Varre vazamento de secrets (`.env`), injeções e valida fronteiras de dados. |
+| **[`subagent-review`](skills/subagent-review/SKILL.md)** | Code review profundo | Dispara 3 subagentes paralelos (Arquiteto, Segurança e QA) via `invoke_subagent`. |
+| **[`parallel-waves`](skills/parallel-waves/SKILL.md)** | Novas funcionalidades | Organiza o desenvolvimento em ondas (Banco -> Backend + UI em paralelo -> Testes). |
+| **[`context7-docs`](skills/context7-docs/SKILL.md)** | Dúvidas de bibliotecas/APIs | Busca APIs atualizadas de bibliotecas para eliminar código legado alucinado. |
+| **[`chrome-devtools`](skills/chrome-devtools/SKILL.md)** | Frontend e UI | Inspeciona erros de console, rede e layout no navegador via MCP. |
+| **[`project-bootstrap`](skills/project-bootstrap/SKILL.md)** | Novo projeto do zero | Cria um projeto Next.js/TypeScript/Python completo a partir de 2 linhas de prompt. |
 
 ---
 
-## 🛠️ O Utilitário `agy-vibe` (CLI)
+## 🛠️ Comandos do Utilitário `agy-vibe`
 
-O executável [`bin/agy-vibe`](./bin/agy-vibe) não possui dependências externas (roda diretamente no Node.js):
+O binário [`bin/agy-vibe`](bin/agy-vibe) é escrito em Node.js puro, sem `node_modules` adicionais:
 
-* `agy-vibe init [dir]` — Cria a estrutura documental e de regras no projeto.
-* `agy-vibe verify` — Executa a esteira de validação (tipos, lint, testes, build, linhas) e emite relatório.
-* `agy-vibe sanitize` — Identifica todos os arquivos com mais de 350 linhas com contagem exata.
-* `agy-vibe install-skills` — Instala as Skills globalmente no Antigravity (`~/.gemini/antigravity/builtin/skills/`).
-* `agy-vibe status` — Analisa o nível de conformidade do projeto atual.
+```bash
+# Inicializa a base do Antigravity no projeto atual
+agy-vibe init .
 
----
+# Executa todos os Quality Gates e gera o relatório de evidência
+agy-vibe verify
 
-## 📁 Estrutura do Repositório
+# Varre todos os arquivos do projeto e alerta os que excedem 350 linhas
+agy-vibe sanitize
 
-```text
-antigravity-vibe-toolkit/
-├── bin/
-│   └── agy-vibe              # CLI executável de automação e quality gates
-├── rules/                    # Regras canônicas para o Antigravity
-│   ├── 01-evidence-first.md
-│   ├── 02-file-size-limits.md
-│   ├── 03-document-manifest.md
-│   └── 04-subagent-coordination.md
-├── skills/                   # Catálogo de Skills com SKILL.md
-│   ├── evidence-first/
-│   ├── modular-350-refactor/
-│   ├── security-auditor/
-│   ├── subagent-review/
-│   ├── parallel-waves/
-│   ├── context7-docs/
-│   ├── chrome-devtools/
-│   └── project-bootstrap/
-├── templates/                # Templates para novos projetos
-│   ├── product.md.template
-│   ├── AGENTS.md.template
-│   ├── GEMINI.md.template
-│   ├── project-docs/         # architecture.md, quality.md, setup.md...
-│   └── mcp/                  # Configurações de servidores MCP
-├── docs/                     # Documentação aprofundada da arquitetura
-├── scripts/                  # Scripts de instalação e runners
-├── LICENSE                   # Licença MIT
-└── README.md
+# Reinstala ou atualiza as skills globais no Antigravity (~/.gemini/antigravity/...)
+agy-vibe install-skills
+
+# Checa o status e a pontuação de conformidade do projeto
+agy-vibe status
 ```
 
 ---
 
 ## 🤝 Créditos e Reconhecimento
 
-Este projeto foi desenvolvido por **Daniel Junior Barbosa da Silva** tendo como base e inspiração central o [vibe-coding-toolkit](https://github.com/soumatheusgomes/vibe-coding-toolkit) de **Matheus Gomes**, a quem prestamos todo o reconhecimento pela curadoria inicial dos padrões de Vibe Coding.
+Este projeto foi concebido e estruturado por **Daniel Junior Barbosa da Silva** como uma evolução dedicada ao **Google Antigravity**, tendo como base fundamental o trabalho pioneiro de [Matheus Gomes (vibe-coding-toolkit)](https://github.com/soumatheusgomes/vibe-coding-toolkit).
 
-A edição **Antigravity Vibe Toolkit** estende esses conceitos para a arquitetura nativa de subagentes, regras hierárquicas e progressive disclosure do **Google Antigravity**.
+Agradecemos imensamente ao Matheus Gomes por curar a metodologia inicial de Vibe Coding. Nossa edição adapta e expande essa base para a arquitetura nativa de subagentes, discovery de regras e progressive disclosure do Google DeepMind Antigravity.
 
 ---
 
 ## 📄 Licença
 
-Distribuído sob a Licença MIT. Consulte [LICENSE](LICENSE) para mais detalhes.
+Distribuído sob a [Licença MIT](LICENSE).
