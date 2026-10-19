@@ -68,6 +68,7 @@ ${colors.bold}COMMANDS:${colors.reset}
   ${colors.green}verify${colors.reset}                Run the full Quality Gate pipeline (lines, types, lint, tests, build) with evidence
   ${colors.green}sanitize${colors.reset}              Scan for files > 350 lines, dead artifacts, and code smells
   ${colors.green}dashboard${colors.reset}             Start the local visual Monitor Dashboard & Obsidian Memory Vault on :4242
+  ${colors.green}dock${colors.reset}                  Launch compact Side-by-Side Companion window alongside Antigravity
   ${colors.green}install-skills${colors.reset}        Install Antigravity skills globally (~/.gemini/antigravity/builtin/skills/)
   ${colors.green}status${colors.reset}                Check current project compliance with Antigravity Vibe standards
 
@@ -121,7 +122,7 @@ function checkStatus(targetDir = CWD) {
 // ---------------------------------------------------------------------------
 // 3. SANITIZE / FILE SIZE CHECK (350-line rule)
 // ---------------------------------------------------------------------------
-function scanDirectoryForLineLimits(dir, maxLines = 350, ignoreDirs = ['node_modules', '.git', 'dist', 'build', '.next', 'brain']) {
+function scanDirectoryForLineLimits(dir, maxLines = 350, ignoreDirs = ['node_modules', '.git', 'dist', 'build', '.next', 'brain', 'venv', '.venv', 'env', '__pycache__', '.gradle', 'site-packages']) {
   const largeFiles = [];
 
   function walk(current) {
@@ -407,6 +408,26 @@ switch (command) {
       if (process.platform === 'darwin') {
         setTimeout(() => {
           try { execSync('open http://localhost:4242'); } catch (e) {}
+        }, 1000);
+      }
+    } catch (e) {}
+    require(serverPath);
+    break;
+  }
+  case 'dock':
+  case 'sidecar': {
+    const serverPath = path.join(PKG_ROOT, 'scripts', 'dashboard-server.js');
+    header('Iniciando Antigravity Side-by-Side Companion');
+    log('Abrindo painel lateral docked em http://localhost:4242/?mode=docked ...', colors.cyan);
+    try {
+      if (process.platform === 'darwin') {
+        setTimeout(() => {
+          try {
+            // Try opening as standalone compact app window if Chrome exists, otherwise regular open
+            execSync('open -na "Google Chrome" --args --app=http://localhost:4242/?mode=docked --window-size=440,850 2>/dev/null || open "http://localhost:4242/?mode=docked"');
+          } catch (e) {
+            try { execSync('open "http://localhost:4242/?mode=docked"'); } catch (err) {}
+          }
         }, 1000);
       }
     } catch (e) {}
