@@ -1,0 +1,409 @@
+#!/usr/bin/env node
+
+/**
+ * Antigravity Vibe Toolkit CLI (agy-vibe)
+ * Autonomous Quality Gates, Project Scaffolding & Skill Management for Google Antigravity
+ *
+ * Inspired by and building upon vibe-coding-toolkit by Matheus Gomes (soumatheusgomes)
+ * Adapted and engineered specifically for Google DeepMind's Antigravity platform.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { execSync, spawnSync } = require('child_process');
+const os = require('os');
+
+const PKG_ROOT = path.resolve(__dirname, '..');
+const CWD = process.cwd();
+
+// ANSI Colors
+const colors = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  magenta: '\x1b[35m',
+  blue: '\x1b[34m',
+};
+
+function log(msg, color = colors.reset) {
+  console.log(`${color}${msg}${colors.reset}`);
+}
+
+function header(title) {
+  console.log(`\n${colors.bold}${colors.cyan}=== ${title} ===${colors.reset}\n`);
+}
+
+function success(msg) {
+  console.log(`${colors.green}✔ ${msg}${colors.reset}`);
+}
+
+function warn(msg) {
+  console.log(`${colors.yellow}⚠ ${msg}${colors.reset}`);
+}
+
+function error(msg) {
+  console.log(`${colors.red}✖ ${msg}${colors.reset}`);
+}
+
+function info(msg) {
+  console.log(`${colors.dim}ℹ ${msg}${colors.reset}`);
+}
+
+// ---------------------------------------------------------------------------
+// 1. HELP COMMAND
+// ---------------------------------------------------------------------------
+function printHelp() {
+  console.log(`
+${colors.bold}${colors.cyan}Antigravity Vibe Toolkit${colors.reset} — ${colors.dim}Supercharged Agentic Coding for Google Antigravity${colors.reset}
+
+${colors.bold}USAGE:${colors.reset}
+  ${colors.green}agy-vibe${colors.reset} <command> [options]
+
+${colors.bold}COMMANDS:${colors.reset}
+  ${colors.green}init${colors.reset} [dir]            Scaffold the Antigravity Vibe Coding foundation (PRODUCT.md, AGENTS.md, docs, rules)
+  ${colors.green}verify${colors.reset}                Run the full Quality Gate pipeline (lines, types, lint, tests, build) with evidence
+  ${colors.green}sanitize${colors.reset}              Scan for files > 350 lines, dead artifacts, and code smells
+  ${colors.green}install-skills${colors.reset}        Install Antigravity skills globally (~/.gemini/antigravity/builtin/skills/)
+  ${colors.green}status${colors.reset}                Check current project compliance with Antigravity Vibe standards
+
+${colors.bold}OPTIONS:${colors.reset}
+  ${colors.yellow}-h, --help${colors.reset}            Show this help menu
+  ${colors.yellow}-v, --version${colors.reset}         Show current version
+
+${colors.dim}Base inspiration: github.com/soumatheusgomes/vibe-coding-toolkit
+Adapted specifically for Google Antigravity by Daniel Junior Barbosa da Silva${colors.reset}
+`);
+}
+
+// ---------------------------------------------------------------------------
+// 2. STATUS COMMAND
+// ---------------------------------------------------------------------------
+function checkStatus(targetDir = CWD) {
+  header('Antigravity Vibe Compliance Check');
+  log(`Scanning target directory: ${targetDir}`, colors.dim);
+
+  const checks = [
+    { file: 'PRODUCT.md', desc: 'Product scope & acceptance criteria' },
+    { file: 'AGENTS.md', desc: 'Canonical agent instructions' },
+    { file: 'GEMINI.md', desc: 'Antigravity workspace rules bridge' },
+    { file: 'docs/architecture.md', desc: 'System architecture & boundaries' },
+    { file: 'docs/quality.md', desc: 'Quality gates & verification standards' },
+    { file: 'docs/setup.md', desc: 'Environment prerequisites & evidence' },
+    { file: '.agents/rules', isDir: true, desc: 'Workspace rule directory' },
+    { file: '.agents/skills', isDir: true, desc: 'Workspace skills directory' },
+  ];
+
+  let passed = 0;
+  for (const c of checks) {
+    const p = path.join(targetDir, c.file);
+    const exists = fs.existsSync(p);
+    if (exists) {
+      success(`${c.file.padEnd(24)} [Found] - ${c.desc}`);
+      passed++;
+    } else {
+      warn(`${c.file.padEnd(24)} [Missing] - ${c.desc}`);
+    }
+  }
+
+  console.log(`\nScore: ${passed}/${checks.length} compliance points.`);
+  if (passed === checks.length) {
+    log('🎉 This project is fully compliant with Antigravity Vibe Coding!', colors.green);
+  } else {
+    log('💡 Run "agy-vibe init" to scaffold missing files automatically.', colors.yellow);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 3. SANITIZE / FILE SIZE CHECK (350-line rule)
+// ---------------------------------------------------------------------------
+function scanDirectoryForLineLimits(dir, maxLines = 350, ignoreDirs = ['node_modules', '.git', 'dist', 'build', '.next', 'brain']) {
+  const largeFiles = [];
+
+  function walk(current) {
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') && entry.name !== '.agents') continue;
+      if (ignoreDirs.includes(entry.name)) continue;
+
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.php', '.vue', '.svelte'].includes(ext)) {
+          try {
+            const content = fs.readFileSync(fullPath, 'utf8');
+            const lines = content.split('\n').length;
+            if (lines > maxLines) {
+              largeFiles.push({ file: path.relative(dir, fullPath), lines });
+            }
+          } catch (e) {
+            // Ignore unreadable files
+          }
+        }
+      }
+    }
+  }
+
+  walk(dir);
+  return largeFiles;
+}
+
+function runSanitize(targetDir = CWD) {
+  header('Codebase Sanitation & 350-Line Limit Check');
+  log(`Scanning for source files exceeding 350 lines in: ${targetDir}`, colors.dim);
+
+  const largeFiles = scanDirectoryForLineLimits(targetDir);
+
+  if (largeFiles.length === 0) {
+    success('All source files adhere to the 350-line modular limit! Perfect modularity.');
+  } else {
+    warn(`Found ${largeFiles.length} file(s) exceeding 350 lines:`);
+    largeFiles.sort((a, b) => b.lines - a.lines);
+    for (const f of largeFiles) {
+      console.log(`  ${colors.red}${f.lines.toString().padStart(5)} lines${colors.reset} -> ${colors.bold}${f.file}${colors.reset}`);
+    }
+    log('\n💡 Recommendation: Break these files down into focused submodules with single responsibilities.', colors.yellow);
+    log('   Activate the skill "modular-350-refactor" in Antigravity to refactor them automatically.', colors.dim);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4. VERIFY / QUALITY GATES
+// ---------------------------------------------------------------------------
+function runVerify(targetDir = CWD) {
+  header('Antigravity Quality Gates Verification');
+  log('Evaluating "Evidence-First" verification pipeline...', colors.dim);
+
+  const results = [];
+
+  // Gate 1: 350-Line Limit
+  const largeFiles = scanDirectoryForLineLimits(targetDir);
+  if (largeFiles.length === 0) {
+    results.push({ gate: 'Modularity (<=350 lines)', status: 'PASS', detail: 'All source files within modular bounds.' });
+  } else {
+    results.push({ gate: 'Modularity (<=350 lines)', status: 'WARN', detail: `${largeFiles.length} file(s) exceed 350 lines.` });
+  }
+
+  // Detect Package Manager / Stack
+  const hasPackageJson = fs.existsSync(path.join(targetDir, 'package.json'));
+  const hasRequirements = fs.existsSync(path.join(targetDir, 'requirements.txt')) || fs.existsSync(path.join(targetDir, 'pyproject.toml'));
+
+  // Gate 2: Typescript / Typecheck
+  if (hasPackageJson) {
+    const pkg = JSON.parse(fs.readFileSync(path.join(targetDir, 'package.json'), 'utf8'));
+    const scripts = pkg.scripts || {};
+
+    // Typecheck
+    if (scripts.typecheck || fs.existsSync(path.join(targetDir, 'tsconfig.json'))) {
+      const cmd = scripts.typecheck ? 'npm run typecheck' : 'npx tsc --noEmit';
+      log(`Running Typecheck: ${cmd}`, colors.dim);
+      const res = spawnSync(cmd, { shell: true, cwd: targetDir, stdio: 'pipe' });
+      if (res.status === 0) {
+        results.push({ gate: 'Typecheck', status: 'PASS', detail: '0 type errors found.' });
+      } else {
+        results.push({ gate: 'Typecheck', status: 'FAIL', detail: res.stderr.toString() || res.stdout.toString() });
+      }
+    }
+
+    // Lint
+    if (scripts.lint) {
+      log(`Running Lint: npm run lint`, colors.dim);
+      const res = spawnSync('npm run lint', { shell: true, cwd: targetDir, stdio: 'pipe' });
+      if (res.status === 0) {
+        results.push({ gate: 'Linter', status: 'PASS', detail: 'Clean lint report.' });
+      } else {
+        results.push({ gate: 'Linter', status: 'FAIL', detail: res.stderr.toString() || res.stdout.toString() });
+      }
+    }
+
+    // Test
+    if (scripts.test && !scripts.test.includes('no test specified')) {
+      log(`Running Tests: npm test`, colors.dim);
+      const res = spawnSync('npm test', { shell: true, cwd: targetDir, stdio: 'pipe' });
+      if (res.status === 0) {
+        results.push({ gate: 'Automated Tests', status: 'PASS', detail: 'All test suites passing.' });
+      } else {
+        results.push({ gate: 'Automated Tests', status: 'FAIL', detail: res.stderr.toString() || res.stdout.toString() });
+      }
+    }
+
+    // Build
+    if (scripts.build) {
+      log(`Running Build Check: npm run build`, colors.dim);
+      const res = spawnSync('npm run build', { shell: true, cwd: targetDir, stdio: 'pipe' });
+      if (res.status === 0) {
+        results.push({ gate: 'Production Build', status: 'PASS', detail: 'Build completed successfully.' });
+      } else {
+        results.push({ gate: 'Production Build', status: 'FAIL', detail: res.stderr.toString() || res.stdout.toString() });
+      }
+    }
+  }
+
+  // Gate for Python
+  if (hasRequirements) {
+    log('Python environment detected. Checking syntax with py_compile...', colors.dim);
+    const res = spawnSync('python3 -m compileall -q .', { shell: true, cwd: targetDir, stdio: 'pipe' });
+    if (res.status === 0) {
+      results.push({ gate: 'Python Syntax Check', status: 'PASS', detail: 'All python files compile cleanly.' });
+    } else {
+      results.push({ gate: 'Python Syntax Check', status: 'FAIL', detail: res.stderr.toString() });
+    }
+  }
+
+  // Print Summary Table
+  console.log('\n' + colors.bold + '--- EVIDENCE REPORT ---' + colors.reset);
+  let allPass = true;
+  for (const r of results) {
+    if (r.status === 'PASS') {
+      success(`${r.gate.padEnd(28)} [PASS] -> ${r.detail}`);
+    } else if (r.status === 'WARN') {
+      warn(`${r.gate.padEnd(28)} [WARN] -> ${r.detail}`);
+    } else {
+      error(`${r.gate.padEnd(28)} [FAIL] -> ${r.detail.slice(0, 100)}...`);
+      allPass = false;
+    }
+  }
+
+  console.log('\n' + colors.bold + 'Conclusion:' + colors.reset);
+  if (allPass) {
+    log('✅ All active quality gates passed. Safe to deliver!', colors.green);
+  } else {
+    log('❌ Quality gates failed. Review errors above before marking ready.', colors.red);
+    process.exitCode = 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 5. INIT / SCAFFOLD COMMAND
+// ---------------------------------------------------------------------------
+function runInit(targetDir = CWD) {
+  header('Scaffolding Antigravity Vibe Coding Setup');
+  log(`Destination: ${targetDir}`, colors.dim);
+
+  const templatesDir = path.join(PKG_ROOT, 'templates');
+  const projectDocsDir = path.join(templatesDir, 'project-docs');
+
+  // Ensure directories
+  const dirs = [
+    path.join(targetDir, 'docs'),
+    path.join(targetDir, '.agents'),
+    path.join(targetDir, '.agents', 'rules'),
+    path.join(targetDir, '.agents', 'skills'),
+  ];
+  for (const d of dirs) {
+    fs.mkdirSync(d, { recursive: true });
+  }
+
+  // Copy or template core docs
+  const filesToCopy = [
+    { src: path.join(templatesDir, 'product.md.template'), dst: path.join(targetDir, 'PRODUCT.md') },
+    { src: path.join(templatesDir, 'AGENTS.md.template'), dst: path.join(targetDir, 'AGENTS.md') },
+    { src: path.join(templatesDir, 'GEMINI.md.template'), dst: path.join(targetDir, 'GEMINI.md') },
+    { src: path.join(projectDocsDir, 'architecture.md.template'), dst: path.join(targetDir, 'docs', 'architecture.md') },
+    { src: path.join(projectDocsDir, 'quality.md.template'), dst: path.join(targetDir, 'docs', 'quality.md') },
+    { src: path.join(projectDocsDir, 'setup.md.template'), dst: path.join(targetDir, 'docs', 'setup.md') },
+    { src: path.join(projectDocsDir, 'onboarding.md.template'), dst: path.join(targetDir, 'docs', 'onboarding.md') },
+    { src: path.join(projectDocsDir, 'design.md.template'), dst: path.join(targetDir, 'docs', 'design.md') },
+  ];
+
+  for (const item of filesToCopy) {
+    if (!fs.existsSync(item.dst)) {
+      if (fs.existsSync(item.src)) {
+        fs.copyFileSync(item.src, item.dst);
+        success(`Created ${path.relative(targetDir, item.dst)}`);
+      } else {
+        warn(`Template not found: ${item.src}`);
+      }
+    } else {
+      info(`Preserved existing ${path.relative(targetDir, item.dst)}`);
+    }
+  }
+
+  // Copy rules into .agents/rules/
+  const srcRulesDir = path.join(PKG_ROOT, 'rules');
+  if (fs.existsSync(srcRulesDir)) {
+    const rules = fs.readdirSync(srcRulesDir);
+    for (const r of rules) {
+      const srcRule = path.join(srcRulesDir, r);
+      const dstRule = path.join(targetDir, '.agents', 'rules', r);
+      if (!fs.existsSync(dstRule)) {
+        fs.copyFileSync(srcRule, dstRule);
+        success(`Installed rule: .agents/rules/${r}`);
+      }
+    }
+  }
+
+  log('\n🎉 Setup completed successfully!', colors.green);
+  log('Google Antigravity will now automatically discover and enforce all guidelines.', colors.cyan);
+}
+
+// ---------------------------------------------------------------------------
+// 6. INSTALL SKILLS COMMAND (Global to ~/.gemini/antigravity/builtin/skills/)
+// ---------------------------------------------------------------------------
+function runInstallSkills() {
+  header('Installing Skills into Antigravity');
+  const homeDir = os.homedir();
+  const globalSkillsDir = path.join(homeDir, '.gemini', 'antigravity', 'builtin', 'skills');
+
+  log(`Target directory: ${globalSkillsDir}`, colors.dim);
+  fs.mkdirSync(globalSkillsDir, { recursive: true });
+
+  const srcSkillsDir = path.join(PKG_ROOT, 'skills');
+  if (!fs.existsSync(srcSkillsDir)) {
+    error('Skills directory not found in toolkit.');
+    return;
+  }
+
+  const skillFolders = fs.readdirSync(srcSkillsDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+  for (const s of skillFolders) {
+    const src = path.join(srcSkillsDir, s);
+    const dst = path.join(globalSkillsDir, s);
+
+    // Recursively copy skill folder
+    fs.cpSync(src, dst, { recursive: true, force: true });
+    success(`Installed Antigravity Skill: ${colors.bold}${s}${colors.reset}`);
+  }
+
+  log('\n✨ All skills installed! They are now active in Google Antigravity across your entire machine.', colors.green);
+}
+
+// ---------------------------------------------------------------------------
+// MAIN ROUTER
+// ---------------------------------------------------------------------------
+const args = process.argv.slice(2);
+const command = args[0] || 'help';
+
+switch (command) {
+  case 'init':
+    runInit(args[1] ? path.resolve(args[1]) : CWD);
+    break;
+  case 'verify':
+    runVerify(args[1] ? path.resolve(args[1]) : CWD);
+    break;
+  case 'sanitize':
+    runSanitize(args[1] ? path.resolve(args[1]) : CWD);
+    break;
+  case 'install-skills':
+    runInstallSkills();
+    break;
+  case 'status':
+    checkStatus(args[1] ? path.resolve(args[1]) : CWD);
+    break;
+  case '-v':
+  case '--version':
+    console.log('Antigravity Vibe Toolkit v1.0.0 (Google Antigravity Edition)');
+    break;
+  case '-h':
+  case '--help':
+  default:
+    printHelp();
+    break;
+}

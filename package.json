@@ -1,0 +1,30 @@
+{
+  "name": "antigravity-vibe-toolkit",
+  "version": "1.0.0",
+  "description": "Production-grade Vibe Coding Toolkit & Quality Gates for Google Antigravity",
+  "main": "bin/agy-vibe",
+  "bin": {
+    "agy-vibe": "./bin/agy-vibe"
+  },
+  "scripts": {
+    "test": "node bin/agy-vibe status",
+    "verify": "node bin/agy-vibe verify",
+    "sanitize": "node bin/agy-vibe sanitize",
+    "install-skills": "node bin/agy-vibe install-skills"
+  },
+  "keywords": [
+    "antigravity",
+    "vibe-coding",
+    "ai-agents",
+    "google-deepmind",
+    "subagents",
+    "quality-gates",
+    "mcp"
+  ],
+  "author": "Daniel Junior Barbosa da Silva",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danieljuniorbarbosa/antigravity-vibe-toolkit.git"
+  }
+}
