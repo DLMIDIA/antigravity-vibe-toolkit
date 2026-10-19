@@ -10,13 +10,15 @@
 [![Google Antigravity Ready](https://img.shields.io/badge/Google%20Antigravity-Native%20Skills-4285F4.svg)](https://deepmind.google)
 [![Architecture: Subagents & MCP](https://img.shields.io/badge/Architecture-Subagents%20%26%20MCP-green.svg)](docs/03-subagent-orchestration.md)
 [![Quality: Evidence--First](https://img.shields.io/badge/Quality-Evidence--First-orange.svg)](docs/02-evidence-first.md)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](docker-compose.yml)
 
-**The definitive autonomous software engineering harness, subagent orchestration engine, and quality gate toolkit for Google Antigravity.**
+**The definitive autonomous software engineering harness, subagent orchestration engine, quality gate pipeline, and token economy monitor for Google Antigravity.**
 
 Inspired by and building upon [Matheus Gomes' vibe-coding-toolkit](https://github.com/soumatheusgomes/vibe-coding-toolkit), this repository is a **specialized, production-grade edition tailored for the Google Antigravity (DeepMind) ecosystem**. It combines:
-* **8 Native Antigravity Skills (`SKILL.md`)** with progressive on-demand disclosure.
+* **8 Native Antigravity Skills with Dedicated Visual Badges (`SKILL.md`)** and progressive on-demand disclosure.
 * **Evidence-First Quality Pipeline**: Never accept "looks good" without terminal proof of types, lint, tests, and builds.
 * **Parallel Wave Subagent Orchestration** with collision-free file-write locking.
+* **Antigravity Vibe Monitor (Web Dashboard & Docker)**: Visual local control panel tracking token economy, multi-project compliance, and Obsidian-style persistent memory.
 * **Zero-Dependency CLI (`agy-vibe`)** for macOS and Linux developer automation.
 
 ---
@@ -54,6 +56,33 @@ This generates the canonical foundation:
 agy-vibe verify
 ```
 Automatically executes TypeScript/Python syntax checking, linters, the 350-line file scan, automated test suites, and production builds, generating a Markdown Evidence Report.
+
+---
+
+## 🖥️ Antigravity Vibe Monitor (Web Dashboard & Docker)
+
+A comprehensive local visual control panel running on port `4242` that tracks real-time token savings, multi-project compliance health, and your persistent Markdown memory vault.
+
+### 3 Ways to Launch the Monitor:
+
+1. **Desktop App Icon (Mac)**:
+   Double-click the **`Antigravity Monitor.app`** created on your Desktop. It automatically starts the server in the background and opens your default browser!
+2. **Via Terminal**:
+   ```bash
+   agy-vibe dashboard
+   ```
+3. **Via Docker / Docker Compose**:
+   ```bash
+   docker compose up -d
+   # Open http://localhost:4242
+   ```
+
+### What the Dashboard Displays:
+* 📊 **Token Economy & Cost Savings**: Real-time calculation of tokens conserved via 350-line modular code boundaries and cached context.
+* 📁 **Multi-Project Monitor**: Scans your local repositories, calculating compliance scores (0 to 8) and identifying oversized files.
+* 🧠 **Obsidian-Style Memory Vault**: Integrated visual viewer for persistent architectural decisions (`PRODUCT.md`, `architecture.md`, `quality.md`).
+* ⚡ **Interactive Skills Showcase**: Illustrated cards detailing YAML frontmatter and triggers for all 8 skills.
+* 🛡️ **Live Quality Gate Console**: Interactive button to trigger `agy-vibe verify` and stream verification telemetry in real time.
 
 ---
 
@@ -102,20 +131,20 @@ Antigravity discovers and resolves conflicting skills hierarchically:
 
 ---
 
-## 🧠 Comprehensive Guide to the 8 Skills (How and When to Use)
+## 🧠 Visual Gallery of the 8 Native Skills
 
-Read the [Detailed Skills Deep Dive](docs/07-skills-deep-dive.md) for full runbooks.
+Read the [Detailed Skills Deep Dive with Illustrations](docs/07-skills-deep-dive.md).
 
-| Skill | Name & Trigger | Core Action |
-| :--- | :--- | :--- |
-| **1. Evidence-First** | `evidence-first`<br>*(Concluding any task)* | **The Quality Guarantee**: Runs the verification pipeline in the background and attaches terminal proof of success to the final answer. |
-| **2. 350-Line Refactorer** | `modular-350-refactor`<br>*(Files > 350 lines)* | **The Clean Code Architect**: Splits monolithic files into focused submodules using the Facade pattern without breaking any existing imports. |
-| **3. Security Auditor** | `security-auditor`<br>*(Security reviews & PRs)* | **The Privacy & SecOps Inspector**: Read-only audit scanning for leaked API keys, `.env` files, SQL injection, and vulnerable dependencies (`npm audit`). |
-| **4. Multi-Agent Review** | `subagent-review`<br>*(Deep code review)* | **The Review Board**: Spawns 3 specialized subagents simultaneously (Architect, Security, QA) via `invoke_subagent` and synthesizes findings. |
-| **5. Parallel Waves** | `parallel-waves`<br>*(Large features)* | **The Construction Manager**: Structures work into sequential, collision-free waves (Wave 1: DB & Schemas $\rightarrow$ Wave 2: Backend + UI in parallel $\rightarrow$ Wave 3: Tests). |
-| **6. Context7 Docs** | `context7-docs`<br>*(Library & API questions)* | **The Up-to-Date Researcher**: Queries current official documentation matching the exact installed package version, preventing deprecated code. |
-| **7. Chrome DevTools** | `chrome-devtools`<br>*(Frontend & Web UI)* | **The Interface Tester**: Launches Chrome via MCP, inspects browser console errors (hydration mismatches), and tests failing network requests. |
-| **8. Project Bootstrap** | `project-bootstrap`<br>*(Starting from scratch)* | **The Instant Scaffolder**: Generates a production-ready Next.js / TypeScript or Python project from a 2-line prompt with full governance. |
+| Skill Badge | Name & Trigger | Core Action |
+| :---: | :--- | :--- |
+| <img src="assets/skills/evidence-first.png" width="160" /> | **Evidence-First**<br>`evidence-first`<br>*(Concluding any task)* | **The Quality Guarantee**: Runs the verification pipeline in the background and attaches terminal proof of success to the final answer. |
+| <img src="assets/skills/modular-350-refactor.png" width="160" /> | **350-Line Refactorer**<br>`modular-350-refactor`<br>*(Files > 350 lines)* | **The Clean Code Architect**: Splits monolithic files into focused submodules using the Facade pattern without breaking any existing imports. |
+| <img src="assets/skills/security-auditor.png" width="160" /> | **Security Auditor**<br>`security-auditor`<br>*(Security reviews & PRs)* | **The Privacy & SecOps Inspector**: Read-only audit scanning for leaked API keys, `.env` files, SQL injection, and vulnerable dependencies (`npm audit`). |
+| <img src="assets/skills/subagent-review.png" width="160" /> | **Multi-Agent Review**<br>`subagent-review`<br>*(Deep code review)* | **The Review Board**: Spawns 3 specialized subagents simultaneously (Architect, Security, QA) via `invoke_subagent` and synthesizes findings. |
+| <img src="assets/skills/parallel-waves.png" width="160" /> | **Parallel Waves**<br>`parallel-waves`<br>*(Large features)* | **The Construction Manager**: Structures work into sequential, collision-free waves (Wave 1: DB & Schemas $\rightarrow$ Wave 2: Backend + UI in parallel $\rightarrow$ Wave 3: Tests). |
+| <img src="assets/skills/context7-docs.png" width="160" /> | **Context7 Docs**<br>`context7-docs`<br>*(Library & API questions)* | **The Up-to-Date Researcher**: Queries current official documentation matching the exact installed package version, preventing deprecated code. |
+| <img src="assets/skills/chrome-devtools.png" width="160" /> | **Chrome DevTools**<br>`chrome-devtools`<br>*(Frontend & Web UI)* | **The Interface Tester**: Launches Chrome via MCP, inspects browser console errors (hydration mismatches), and tests failing network requests. |
+| <img src="assets/skills/project-bootstrap.png" width="160" /> | **Project Bootstrap**<br>`project-bootstrap`<br>*(Starting from scratch)* | **The Instant Scaffolder**: Generates a production-ready Next.js / TypeScript or Python project from a 2-line prompt with full governance. |
 
 ---
 
@@ -132,6 +161,9 @@ agy-vibe verify
 
 # Scan all project files and flag those exceeding 350 lines
 agy-vibe sanitize
+
+# Start the local visual Monitor Dashboard & Obsidian Memory Vault on :4242
+agy-vibe dashboard
 
 # Reinstall or update global Antigravity skills (~/.gemini/antigravity/...)
 agy-vibe install-skills

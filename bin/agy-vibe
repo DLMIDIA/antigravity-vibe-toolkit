@@ -67,6 +67,7 @@ ${colors.bold}COMMANDS:${colors.reset}
   ${colors.green}init${colors.reset} [dir]            Scaffold the Antigravity Vibe Coding foundation (PRODUCT.md, AGENTS.md, docs, rules)
   ${colors.green}verify${colors.reset}                Run the full Quality Gate pipeline (lines, types, lint, tests, build) with evidence
   ${colors.green}sanitize${colors.reset}              Scan for files > 350 lines, dead artifacts, and code smells
+  ${colors.green}dashboard${colors.reset}             Start the local visual Monitor Dashboard & Obsidian Memory Vault on :4242
   ${colors.green}install-skills${colors.reset}        Install Antigravity skills globally (~/.gemini/antigravity/builtin/skills/)
   ${colors.green}status${colors.reset}                Check current project compliance with Antigravity Vibe standards
 
@@ -397,6 +398,21 @@ switch (command) {
   case 'status':
     checkStatus(args[1] ? path.resolve(args[1]) : CWD);
     break;
+  case 'dashboard':
+  case 'monitor': {
+    const serverPath = path.join(PKG_ROOT, 'scripts', 'dashboard-server.js');
+    header('Iniciando Antigravity Vibe Monitor');
+    log('Abrindo dashboard em http://localhost:4242 ...', colors.cyan);
+    try {
+      if (process.platform === 'darwin') {
+        setTimeout(() => {
+          try { execSync('open http://localhost:4242'); } catch (e) {}
+        }, 1000);
+      }
+    } catch (e) {}
+    require(serverPath);
+    break;
+  }
   case '-v':
   case '--version':
     console.log('Antigravity Vibe Toolkit v1.0.0 (Google Antigravity Edition)');

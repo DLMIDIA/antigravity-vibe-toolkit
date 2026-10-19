@@ -10,13 +10,15 @@
 [![Google Antigravity Ready](https://img.shields.io/badge/Google%20Antigravity-Native%20Skills-4285F4.svg)](https://deepmind.google)
 [![Architecture: Subagents & MCP](https://img.shields.io/badge/Architecture-Subagents%20%26%20MCP-green.svg)](docs/03-subagent-orchestration.md)
 [![Quality: Evidence--First](https://img.shields.io/badge/Quality-Evidence--First-orange.svg)](docs/02-evidence-first.md)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](docker-compose.yml)
 
-**A esteira definitiva de engenharia de software autônoma, orquestração de subagentes e quality gates para o Google Antigravity.**
+**A esteira definitiva de engenharia de software autônoma, orquestração de subagentes, quality gates e monitor de economia de tokens para o Google Antigravity.**
 
 Inspirado e construído a partir da curadoria original do [vibe-coding-toolkit de Matheus Gomes](https://github.com/soumatheusgomes/vibe-coding-toolkit), este projeto é uma **edição especializada e expandida para o ecossistema do Google Antigravity (Google DeepMind)**. Ele reúne:
-* **8 Skills Nativas (`SKILL.md`)** com descoberta progressiva (*Progressive Disclosure*).
+* **8 Skills Nativas com Ilustrações Dedicadas (`SKILL.md`)** e descoberta progressiva (*Progressive Disclosure*).
 * **Esteira Evidence-First**: Nunca aceite "parece pronto" sem prova de compilação, tipos, lint e testes.
 * **Orquestração de Subagentes em Ondas Paralelas** com bloqueio de concorrência por arquivo.
+* **Antigravity Vibe Monitor (Dashboard Web & Docker)**: Painel visual local para acompanhar a economia de tokens, saúde dos projetos e cofre de memória estilo Obsidian.
 * **Utilitário CLI (`agy-vibe`)** de zero dependências para automação e validação no Mac/Linux.
 
 ---
@@ -54,6 +56,33 @@ Isso gera a fundação canônica:
 agy-vibe verify
 ```
 Testa tipos, lint, limite de 350 linhas por arquivo, suites de teste e compilação de produção, gerando um relatório em Markdown com prova de execução!
+
+---
+
+## 🖥️ Antigravity Vibe Monitor (Dashboard & Docker)
+
+Um painel visual local completo que roda na porta `4242` e monitora em tempo real a economia de tokens, o status dos seus projetos e o cofre de memória persistente.
+
+### 3 Formas de Abrir o Monitor:
+
+1. **Pelo Ícone na Área de Trabalho (Mac)**:
+   Dê dois cliques no aplicativo **`Antigravity Monitor.app`** gerado na sua Área de Trabalho. Ele inicializa o servidor em segundo plano e abre o navegador automaticamente!
+2. **Pelo Terminal**:
+   ```bash
+   agy-vibe dashboard
+   ```
+3. **Via Docker / Docker Compose**:
+   ```bash
+   docker compose up -d
+   # Acesse em http://localhost:4242
+   ```
+
+### O que o Painel Mostra:
+* 📊 **Economia de Tokens**: Cálculo em tempo real dos tokens economizados pela modularização (regra das 350 linhas) e custos em dólares poupados.
+* 📁 **Monitor de Projetos**: Varredura dos seus projetos locais, pontuação de compliance (0 a 8) e arquivos que precisam de atenção.
+* 🧠 **Cofre de Memória Estilo Obsidian**: Visualização integrada de notas de arquitetura e decisões de projeto (`PRODUCT.md`, `architecture.md`, `quality.md`).
+* ⚡ **Catálogo Interativo de Skills**: Cards com arte gráfica e instruções de acionamento das 8 skills.
+* 🛡️ **Terminal de Validação**: Botão para disparar o `agy-vibe verify` e assistir a saída em tempo real.
 
 ---
 
@@ -102,20 +131,20 @@ O Antigravity descobre e prioriza as customizações na seguinte ordem:
 
 ---
 
-## 🧠 Guia Completo das 8 Skills (Como e Quando Usar)
+## 🧠 Galeria Visual das 8 Skills Nativas
 
-Mais detalhes no [Guia Aprofundado de Skills](docs/07-skills-deep-dive.md).
+Confira o [Guia Aprofundado de Skills com Ilustrações](docs/07-skills-deep-dive.md).
 
-| Skill | Nome & Gatilho | O que faz na prática |
-| :--- | :--- | :--- |
-| **1. Evidence-First** | `evidence-first`<br>*(Ao finalizar qualquer tarefa)* | **O Selo de Garantia**: Roda a esteira de validação em segundo plano e anexa a prova com logs de sucesso na resposta final. |
-| **2. Refatorador 350 Linhas** | `modular-350-refactor`<br>*(Arquivos > 350 linhas)* | **O Arquiteto de Código Limpo**: Divide arquivos gigantescos em submódulos coesos usando o Facade Pattern, sem quebrar os imports do projeto. |
-| **3. Auditor de Segurança** | `security-auditor`<br>*(Revisões de segurança)* | **O Auditor de Privacidade**: Modo somente-leitura. Varre vazamento de chaves de API, senhas, SQL injection e vulnerabilidades em pacotes (`npm audit`). |
-| **4. Revisão Multi-Agente** | `subagent-review`<br>*(Code review profundo)* | **A Banca Examinadora**: Dispara 3 subagentes em paralelo (Arquiteto, Segurança e QA) via `invoke_subagent` e sintetiza um parecer único. |
-| **5. Ondas Paralelas** | `parallel-waves`<br>*(Grandes funcionalidades)* | **O Gerente de Obras**: Organiza o desenvolvimento em etapas sem colisão (Onda 1: Banco $\rightarrow$ Onda 2: Backend e UI em paralelo $\rightarrow$ Onda 3: Testes). |
-| **6. Context7 Docs** | `context7-docs`<br>*(Dúvidas de bibliotecas)* | **O Pesquisador de APIs**: Consulta a documentação oficial da versão exata instalada no seu projeto, evitando código depreciado ou alucinado. |
-| **7. Chrome DevTools** | `chrome-devtools`<br>*(Frontend e Telas)* | **O Testador de Interface**: Abre o site no Chrome via MCP, checa erros de hydration no console e testa chamadas de rede com falha. |
-| **8. Project Bootstrap** | `project-bootstrap`<br>*(Novo projeto do zero)* | **O Construtor Instantâneo**: Scaffolda um projeto completo (Next.js/TypeScript/Tailwind ou Python) a partir de 2 linhas de prompt com qualidade garantida. |
+| Card da Skill | Nome & Gatilho | O que faz na prática |
+| :---: | :--- | :--- |
+| <img src="assets/skills/evidence-first.png" width="160" /> | **Evidence-First**<br>`evidence-first`<br>*(Ao finalizar tarefas)* | **O Selo de Garantia**: Roda a esteira de validação em segundo plano e anexa a prova com logs de sucesso na resposta final. |
+| <img src="assets/skills/modular-350-refactor.png" width="160" /> | **Refatorador 350 Linhas**<br>`modular-350-refactor`<br>*(Arquivos > 350 linhas)* | **O Arquiteto de Código Limpo**: Divide arquivos gigantescos em submódulos coesos usando o Facade Pattern, sem quebrar os imports do projeto. |
+| <img src="assets/skills/security-auditor.png" width="160" /> | **Auditor de Segurança**<br>`security-auditor`<br>*(Revisões de segurança)* | **O Auditor de Privacidade**: Modo somente-leitura. Varre vazamento de chaves de API, senhas, SQL injection e vulnerabilidades em pacotes (`npm audit`). |
+| <img src="assets/skills/subagent-review.png" width="160" /> | **Revisão Multi-Agente**<br>`subagent-review`<br>*(Code review profundo)* | **A Banca Examinadora**: Dispara 3 subagentes em paralelo (Arquiteto, Segurança e QA) via `invoke_subagent` e sintetiza um parecer único. |
+| <img src="assets/skills/parallel-waves.png" width="160" /> | **Ondas Paralelas**<br>`parallel-waves`<br>*(Grandes funcionalidades)* | **O Gerente de Obras**: Organiza o desenvolvimento em etapas sem colisão (Onda 1: Banco $\rightarrow$ Onda 2: Backend e UI em paralelo $\rightarrow$ Onda 3: Testes). |
+| <img src="assets/skills/context7-docs.png" width="160" /> | **Context7 Docs**<br>`context7-docs`<br>*(Dúvidas de bibliotecas)* | **O Pesquisador de APIs**: Consulta a documentação oficial da versão exata instalada no seu projeto, evitando código depreciado ou alucinado. |
+| <img src="assets/skills/chrome-devtools.png" width="160" /> | **Chrome DevTools**<br>`chrome-devtools`<br>*(Frontend e Telas)* | **O Testador de Interface**: Abre o site no Chrome via MCP, checa erros de hydration no console e testa chamadas de rede com falha. |
+| <img src="assets/skills/project-bootstrap.png" width="160" /> | **Project Bootstrap**<br>`project-bootstrap`<br>*(Novo projeto do zero)* | **O Construtor Instantâneo**: Scaffolda um projeto completo (Next.js/TypeScript/Tailwind ou Python) a partir de 2 linhas de prompt com qualidade garantida. |
 
 ---
 
@@ -132,6 +161,9 @@ agy-vibe verify
 
 # Varre todos os arquivos do projeto e alerta os que excedem 350 linhas
 agy-vibe sanitize
+
+# Inicia o Dashboard / Monitor local na porta 4242
+agy-vibe dashboard
 
 # Reinstala ou atualiza as skills globais no Antigravity (~/.gemini/antigravity/...)
 agy-vibe install-skills

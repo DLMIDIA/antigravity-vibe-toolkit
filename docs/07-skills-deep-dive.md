@@ -1,10 +1,14 @@
 # Guia Aprofundado das 8 Skills do Antigravity
 
-Este documento detalha o propósito, funcionamento interno, comandos de ativação e casos de uso de cada uma das 8 skills incluídas no **Antigravity Vibe Toolkit**.
+Este documento detalha o propósito, funcionamento interno, comandos de ativação e visualização de cada uma das 8 skills incluídas no **Antigravity Vibe Toolkit**.
 
 ---
 
 ## 1. `evidence-first` (O Selo de Garantia)
+
+<p align="center">
+  <img src="../assets/skills/evidence-first.png" alt="Evidence First Skill" width="85%" />
+</p>
 
 ### O que é?
 É a skill responsável por garantir que o agente de IA nunca encerre uma tarefa com um simples "fiz as alterações". Ela obriga o agente a comprovar que o código compila, passa nos testes e não introduziu regressões.
@@ -22,6 +26,10 @@ Este documento detalha o propósito, funcionamento interno, comandos de ativaç�
 ---
 
 ## 2. `modular-350-refactor` (O Arquiteto de Código Limpo)
+
+<p align="center">
+  <img src="../assets/skills/modular-350-refactor.png" alt="Modular 350 Refactor Skill" width="85%" />
+</p>
 
 ### O que é?
 Impede a criação de "arquivos monólitos" (arquivos de 500 a 1.500 linhas que misturam banco de dados, regras de negócio e interface visual). Arquivos longos confundem as IAs e geram bugs frequentes.
@@ -41,6 +49,10 @@ Impede a criação de "arquivos monólitos" (arquivos de 500 a 1.500 linhas que 
 
 ## 3. `security-auditor` (O Auditor de Segurança e Privacidade)
 
+<p align="center">
+  <img src="../assets/skills/security-auditor.png" alt="Security Auditor Skill" width="85%" />
+</p>
+
 ### O que é?
 Executa uma auditoria completa de segurança em modo **somente-leitura**, sem modificar os arquivos sem autorização.
 
@@ -58,6 +70,10 @@ Executa uma auditoria completa de segurança em modo **somente-leitura**, sem mo
 ---
 
 ## 4. `subagent-review` (O Comitê de Revisão com 3 Especialistas)
+
+<p align="center">
+  <img src="../assets/skills/subagent-review.png" alt="Subagent Review Skill" width="85%" />
+</p>
 
 ### O que é?
 Em vez de depender da opinião de um único agente geral, essa skill orquestra **3 subagentes especialistas trabalhando ao mesmo tempo** via `invoke_subagent`.
@@ -77,6 +93,10 @@ O agente coordenador coleta os 3 relatórios, remove redundâncias e apresenta u
 ---
 
 ## 5. `parallel-waves` (O Gerente de Obras em Ondas Paralelas)
+
+<p align="center">
+  <img src="../assets/skills/parallel-waves.png" alt="Parallel Waves Skill" width="85%" />
+</p>
 
 ### O que é?
 Permite criar funcionalidades completas (Fullstack) usando múltiplos agentes sem que eles editem os mesmos arquivos ao mesmo tempo (o que causaria colisões e perda de código).
@@ -98,6 +118,10 @@ Organiza o desenvolvimento em ondas estritas:
 
 ## 6. `context7-docs` (O Pesquisador de Documentação Atualizada)
 
+<p align="center">
+  <img src="../assets/skills/context7-docs.png" alt="Context7 Docs Skill" width="85%" />
+</p>
+
 ### O que é?
 Elimina o problema crônico de IAs alucinarem sintaxes de versões antigas de frameworks (ex: misturar sintaxe de Next.js Pages Router com App Router, ou usar versões defasadas do Tailwind/Drizzle).
 
@@ -113,6 +137,10 @@ Elimina o problema crônico de IAs alucinarem sintaxes de versões antigas de fr
 ---
 
 ## 7. `chrome-devtools` (O Testador de Interface no Navegador)
+
+<p align="center">
+  <img src="../assets/skills/chrome-devtools.png" alt="Chrome DevTools Skill" width="85%" />
+</p>
 
 ### O que é?
 Conecta o Antigravity diretamente ao navegador Google Chrome via MCP (Puppeteer/DevTools) para testar a aplicação visualmente.
@@ -130,6 +158,10 @@ Conecta o Antigravity diretamente ao navegador Google Chrome via MCP (Puppeteer/
 ---
 
 ## 8. `project-bootstrap` (O Criador Instantâneo de Projetos Profissionais)
+
+<p align="center">
+  <img src="../assets/skills/project-bootstrap.png" alt="Project Bootstrap Skill" width="85%" />
+</p>
 
 ### O que é?
 Permite criar um projeto novo completo a partir de apenas 2 linhas de prompt em linguagem natural.
