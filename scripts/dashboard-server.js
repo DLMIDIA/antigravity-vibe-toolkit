@@ -450,6 +450,8 @@ function getMemoryVault() {
     { title: 'setup.md (Ambiente & Fontes)', path: path.join(PKG_ROOT, 'docs', 'setup.md') },
     { title: '07-skills-deep-dive.md (Guia de Skills)', path: path.join(PKG_ROOT, 'docs', '07-skills-deep-dive.md') },
     { title: '08-quality-gates-guide.md (Guia Quality Gates)', path: path.join(PKG_ROOT, 'docs', '08-quality-gates-guide.md') },
+    { title: '09-editing-methodology.md (Metodologia de Edição ASEM)', path: path.join(PKG_ROOT, 'docs', '09-editing-methodology.md') },
+    { title: '05-surgical-editing.md (Regra Cirúrgica Antigravity)', path: path.join(PKG_ROOT, '.agents', 'rules', '05-surgical-editing.md') },
   ];
 
   for (const doc of projectDocs) {
