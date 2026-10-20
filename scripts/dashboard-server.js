@@ -451,7 +451,9 @@ function getMemoryVault() {
     { title: '07-skills-deep-dive.md (Guia de Skills)', path: path.join(PKG_ROOT, 'docs', '07-skills-deep-dive.md') },
     { title: '08-quality-gates-guide.md (Guia Quality Gates)', path: path.join(PKG_ROOT, 'docs', '08-quality-gates-guide.md') },
     { title: '09-editing-methodology.md (Metodologia de Edição ASEM)', path: path.join(PKG_ROOT, 'docs', '09-editing-methodology.md') },
+    { title: '10-skill-orchestrator-autopilot.md (Guia Skill Orchestrator)', path: path.join(PKG_ROOT, 'docs', '10-skill-orchestrator-autopilot.md') },
     { title: '05-surgical-editing.md (Regra Cirúrgica Antigravity)', path: path.join(PKG_ROOT, '.agents', 'rules', '05-surgical-editing.md') },
+    { title: '06-skill-orchestrator.md (Regra Auto-Pilot & Macro)', path: path.join(PKG_ROOT, '.agents', 'rules', '06-skill-orchestrator.md') },
   ];
 
   for (const doc of projectDocs) {
@@ -794,7 +796,7 @@ function renderHTML() {
         <button class="tab-btn" onclick="switchTab('models')">Modelos &amp; Cotas</button>
         <button class="tab-btn" onclick="switchTab('projects')">Projetos</button>
         <button class="tab-btn" onclick="switchTab('memory')">Memória Vault</button>
-        <button class="tab-btn" onclick="switchTab('skills')">Skills (8)</button>
+        <button class="tab-btn" onclick="switchTab('skills')">Skills (9)</button>
       </nav>
       <button class="btn-mode-toggle" id="btn-toggle-mode" onclick="toggleLayoutMode()" title="Alternar entre modo tela cheia e painel lateral docked">
         <span>🖥️</span> <span id="mode-label">Modo Lateral</span>
@@ -877,7 +879,10 @@ function renderHTML() {
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Últimas Ações do Agente neste Projeto:</div>
-        <button onclick="runQualityGate()" style="background:rgba(6,182,212,0.15); border:1px solid var(--cyan); color:#38bdf8; font-size:11px; padding:3px 10px; border-radius:6px; cursor:pointer; font-weight:700;">⚡ Rodar Quality Gate</button>
+        <div style="display:flex; gap:8px;">
+          <button onclick="runAutopilotScan()" style="background:rgba(139,92,246,0.15); border:1px solid var(--purple); color:#c084fc; font-size:11px; padding:3px 10px; border-radius:6px; cursor:pointer; font-weight:700;">🤖 Auto-Pilot Skills</button>
+          <button onclick="runQualityGate()" style="background:rgba(6,182,212,0.15); border:1px solid var(--cyan); color:#38bdf8; font-size:11px; padding:3px 10px; border-radius:6px; cursor:pointer; font-weight:700;">⚡ Rodar Quality Gate</button>
+        </div>
       </div>
       <div class="action-timeline" id="agent-recent-actions">
         <!-- Injected dynamically -->
@@ -1029,7 +1034,7 @@ function renderHTML() {
     <!-- TAB 5: SKILLS -->
     <div id="tab-skills" class="tab-content full-only">
       <div class="section-title">
-        <span>Catálogo Visual das 8 Skills Nativas do Antigravity</span>
+        <span>Catálogo Visual das 9 Skills Nativas do Antigravity</span>
       </div>
       <div class="skills-grid" id="skills-grid">
         <!-- Skill cards -->
@@ -1091,6 +1096,20 @@ function renderHTML() {
         alert('Erro ao disparar verificação: ' + e.message);
       } finally {
         btn.innerText = '⚡ Rodar Quality Gate';
+      }
+    }
+
+    async function runAutopilotScan() {
+      const btn = event.target;
+      const orig = btn.innerText;
+      btn.innerText = 'Escaneando...';
+      try {
+        const res = await fetch('/api/autopilot', { method: 'POST' }).then(r => r.json());
+        alert('🤖 Relatório do Skill Orchestrator & Auto-Pilot:\n\n' + res.output.slice(0, 800));
+      } catch (e) {
+        alert('Erro ao rodar Auto-Pilot: ' + e.message);
+      } finally {
+        btn.innerText = orig;
       }
     }
 
@@ -1393,6 +1412,23 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/verify' && req.method === 'POST') {
     try {
       const output = execSync(`"${path.join(PKG_ROOT, 'bin', 'agy-vibe')}" verify "${PKG_ROOT}"`, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, output }));
+    } catch (e) {
+      const output = (e.stdout || '') + '\n' + (e.stderr || '');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, output }));
+    }
+    return;
+  }
+
+  // API: Run Autopilot Skill Orchestrator
+  if (pathname === '/api/autopilot' && req.method === 'POST') {
+    try {
+      const output = execSync(`"${path.join(PKG_ROOT, 'bin', 'agy-vibe')}" autopilot "${PKG_ROOT}"`, {
         encoding: 'utf8',
         stdio: 'pipe',
       });

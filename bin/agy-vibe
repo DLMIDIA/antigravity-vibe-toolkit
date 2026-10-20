@@ -15,6 +15,7 @@ const os = require('os');
 
 const PKG_ROOT = path.resolve(__dirname, '..');
 const CWD = process.cwd();
+const HOME = os.homedir();
 
 // ANSI Colors
 const colors = {
@@ -69,6 +70,8 @@ ${colors.bold}COMMANDS:${colors.reset}
   ${colors.green}sanitize${colors.reset}              Scan for files > 350 lines, dead artifacts, and code smells
   ${colors.green}dashboard${colors.reset}             Start the local visual Monitor Dashboard & Obsidian Memory Vault on :4242
   ${colors.green}dock${colors.reset}                  Launch compact Side-by-Side Companion window alongside Antigravity
+  ${colors.green}autopilot${colors.reset} [dir]        Analyze project stack, match compatible skills & run health audits
+  ${colors.green}schedule${colors.reset} [cadence]     Configure automated background recurring health checks (daily, 30m)
   ${colors.green}install-skills${colors.reset}        Install Antigravity skills globally (~/.gemini/antigravity/builtin/skills/)
   ${colors.green}status${colors.reset}                Check current project compliance with Antigravity Vibe standards
 
@@ -122,22 +125,30 @@ function checkStatus(targetDir = CWD) {
 // ---------------------------------------------------------------------------
 // 3. SANITIZE / FILE SIZE CHECK (350-line rule)
 // ---------------------------------------------------------------------------
-function scanDirectoryForLineLimits(dir, maxLines = 350, ignoreDirs = ['node_modules', '.git', 'dist', 'build', '.next', 'brain', 'venv', '.venv', 'env', '__pycache__', '.gradle', 'site-packages']) {
+function scanDirectoryForLineLimits(dir, maxLines = 350, ignoreDirs = ['node_modules', '.git', 'dist', 'build', '.next', 'brain', 'venv', '.venv', 'env', '__pycache__', '.gradle', 'site-packages', 'backup', 'backups', 'vendor', 'assets']) {
   const largeFiles = [];
 
-  function walk(current) {
-    const entries = fs.readdirSync(current, { withFileTypes: true });
+  function walk(current, depth = 0) {
+    if (depth > 5) return;
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch (e) {
+      return;
+    }
     for (const entry of entries) {
       if (entry.name.startsWith('.') && entry.name !== '.agents') continue;
       if (ignoreDirs.includes(entry.name)) continue;
 
       const fullPath = path.join(current, entry.name);
       if (entry.isDirectory()) {
-        walk(fullPath);
+        walk(fullPath, depth + 1);
       } else if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
-        if (['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.php', '.vue', '.svelte'].includes(ext)) {
+        if (['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.php', '.vue', '.svelte', '.html', '.css'].includes(ext)) {
           try {
+            const st = fs.statSync(fullPath);
+            if (st.size > 400000) continue;
             const content = fs.readFileSync(fullPath, 'utf8');
             const lines = content.split('\n').length;
             if (lines > maxLines) {
@@ -151,7 +162,7 @@ function scanDirectoryForLineLimits(dir, maxLines = 350, ignoreDirs = ['node_mod
     }
   }
 
-  walk(dir);
+  walk(dir, 0);
   return largeFiles;
 }
 
@@ -378,6 +389,175 @@ function runInstallSkills() {
 }
 
 // ---------------------------------------------------------------------------
+// 7. AUTOPILOT & SKILL ORCHESTRATION
+// ---------------------------------------------------------------------------
+function runAutopilot(targetDir = CWD, scheduleArg = null) {
+  header('Antigravity Skill Orchestrator & Auto-Pilot');
+  log(`Scanning project profile & evaluating skill compatibility in: ${targetDir}\n`, colors.dim);
+
+  // 1. Stack Profiling
+  const hasPackageJson = fs.existsSync(path.join(targetDir, 'package.json'));
+  const hasTsConfig = fs.existsSync(path.join(targetDir, 'tsconfig.json'));
+  const hasRequirements = fs.existsSync(path.join(targetDir, 'requirements.txt')) || fs.existsSync(path.join(targetDir, 'pyproject.toml'));
+  const hasComposer = fs.existsSync(path.join(targetDir, 'composer.json'));
+  const hasEnv = fs.existsSync(path.join(targetDir, '.env'));
+  
+  const largeFiles = scanDirectoryForLineLimits(targetDir);
+  
+  const hasProduct = fs.existsSync(path.join(targetDir, 'PRODUCT.md'));
+  const hasAgents = fs.existsSync(path.join(targetDir, 'AGENTS.md'));
+  const hasGemini = fs.existsSync(path.join(targetDir, 'GEMINI.md'));
+  const missingManifests = (!hasProduct || !hasAgents || !hasGemini);
+
+  let hasWebUI = false;
+  let hasPhpFiles = false;
+  try {
+    const files = fs.readdirSync(targetDir);
+    hasWebUI = files.some(f => f.endsWith('.html') || f.endsWith('.css') || f === 'css' || f === 'src' || f === 'public');
+    hasPhpFiles = files.some(f => f.endsWith('.php') || f === 'php');
+  } catch(e) {}
+
+  // 2. Compatibility Matrix
+  const skillsMatrix = [
+    {
+      skill: 'modular-350-refactor',
+      trigger: largeFiles.length > 0 ? `${largeFiles.length} arquivo(s) > 350 linhas` : 'Modularidade 100% aderente',
+      score: largeFiles.length > 0 ? 100 : 25,
+      status: largeFiles.length > 0 ? 'CRITICAL' : 'OPTIONAL',
+      action: largeFiles.length > 0 ? 'Desmembrar módulos com padrão Facade' : 'Manter monitoramento de limites'
+    },
+    {
+      skill: 'security-auditor',
+      trigger: (hasEnv || hasComposer || hasPackageJson || hasPhpFiles) ? 'Rotas/dependências/ambiente ativos' : 'Superfície padrão',
+      score: hasEnv ? 95 : 85,
+      status: 'RECOMMENDED',
+      action: 'Auditar vazamento de chaves, injeções e permissões'
+    },
+    {
+      skill: 'evidence-first',
+      trigger: 'Verificação contínua de integridade (Quality Gate)',
+      score: 95,
+      status: 'RECOMMENDED',
+      action: 'Executar testes, lint e typecheck com prova no terminal'
+    },
+    {
+      skill: 'project-bootstrap',
+      trigger: missingManifests ? 'Faltam PRODUCT.md / AGENTS.md' : 'Manifestos já presentes',
+      score: missingManifests ? 95 : 20,
+      status: missingManifests ? 'HIGH' : 'LOW',
+      action: missingManifests ? 'Inicializar estrutura de governança ASEM' : 'Governança já configurada'
+    },
+    {
+      skill: 'chrome-devtools',
+      trigger: hasWebUI ? 'Interface Web / DOM / CSS detectada' : 'Sem UI web visível',
+      score: hasWebUI ? 90 : 15,
+      status: hasWebUI ? 'RECOMMENDED' : 'LOW',
+      action: hasWebUI ? 'Inspecionar console, rede e responsividade' : 'Dispensável para backend puro'
+    },
+    {
+      skill: 'context7-docs',
+      trigger: (hasPackageJson || hasComposer || hasRequirements) ? 'Dependências externas presentes' : 'Sem dependências externas',
+      score: 85,
+      status: 'RECOMMENDED',
+      action: 'Carregar documentações atualizadas das bibliotecas'
+    },
+    {
+      skill: 'parallel-waves',
+      trigger: largeFiles.length >= 2 ? `${largeFiles.length} frentes de refatoração simultâneas` : 'Poucas tarefas paralelas',
+      score: largeFiles.length >= 2 ? 85 : 30,
+      status: largeFiles.length >= 2 ? 'HIGH' : 'LOW',
+      action: 'Distribuir refatorações paralelas em subagentes independentes'
+    },
+    {
+      skill: 'subagent-review',
+      trigger: 'Auditoria multi-perspectiva (Arquiteto, Segurança, QA)',
+      score: 80,
+      status: 'RECOMMENDED',
+      action: 'Validar mudanças de arquitetura com múltiplos subagentes'
+    },
+    {
+      skill: 'skill-orchestrator',
+      trigger: 'Orquestrador mestre ativo',
+      score: 100,
+      status: 'ACTIVE',
+      action: 'Supervisionar ciclo de vida e agendamentos periódicos'
+    }
+  ];
+
+  skillsMatrix.sort((a, b) => b.score - a.score);
+
+  log('📊 Skill Compatibility & Recommendation Matrix:', colors.bold);
+  console.log('--------------------------------------------------------------------------------------------------');
+  console.log(` ${colors.bold}SKILL${colors.reset.padEnd(25)} ${colors.bold}COMPATIBILIDADE${colors.reset.padEnd(16)} ${colors.bold}GATILHO DETECTADO${colors.reset.padEnd(35)} ${colors.bold}AÇÃO RECOMENDADA${colors.reset}`);
+  console.log('--------------------------------------------------------------------------------------------------');
+
+  for (const item of skillsMatrix) {
+    let scoreColor = colors.green;
+    if (item.score < 50) scoreColor = colors.dim;
+    else if (item.score < 80) scoreColor = colors.yellow;
+
+    const skillCol = item.skill.padEnd(24);
+    const scoreCol = `${scoreColor}${item.score}% [${item.status}]${colors.reset}`.padEnd(26);
+    const triggerCol = item.trigger.slice(0, 32).padEnd(33);
+    const actionCol = item.action;
+
+    console.log(` ${skillCol} ${scoreCol} ${triggerCol} ${actionCol}`);
+  }
+  console.log('--------------------------------------------------------------------------------------------------\n');
+
+  // Immediate Action Execution
+  const topAction = skillsMatrix.find(s => s.status === 'CRITICAL' || s.score >= 95);
+  if (topAction) {
+    log(`🎯 Ação Imediata Prioritária: ${colors.bold}${topAction.skill}${colors.reset}`, colors.cyan);
+    log(`   Motivo: ${topAction.trigger}`, colors.dim);
+    log(`   Ação: ${topAction.action}\n`, colors.dim);
+  }
+
+  // Handle schedule option
+  if (scheduleArg) {
+    runSchedule(scheduleArg, targetDir);
+  } else {
+    log('💡 Dica: Para agendar esta verificação de forma recorrente (ex: a cada 30min ou diária):', colors.dim);
+    log('   agy-vibe schedule 30m', colors.cyan);
+    log('   agy-vibe schedule daily\n', colors.cyan);
+  }
+}
+
+function runSchedule(cadence = 'daily', targetDir = CWD) {
+  header('Antigravity Background Scheduler');
+  const sidecarDir = path.join(HOME, '.gemini', 'config', 'sidecars', 'vibe-autopilot');
+  fs.mkdirSync(sidecarDir, { recursive: true });
+
+  let cronExpression = 'CRON_TZ=America/Sao_Paulo 0 9 * * *';
+  let humanCadence = 'Diariamente às 09:00';
+
+  if (cadence === '30m' || cadence === 'half-hourly') {
+    cronExpression = 'CRON_TZ=America/Sao_Paulo */30 * * * *';
+    humanCadence = 'A cada 30 minutos';
+  } else if (cadence === 'hourly' || cadence === '1h') {
+    cronExpression = 'CRON_TZ=America/Sao_Paulo 0 * * * *';
+    humanCadence = 'A cada hora';
+  }
+
+  const sidecarConfig = {
+    builtin: 'schedule',
+    args: [
+      cronExpression,
+      `Execute Antigravity Vibe Auto-Pilot in workspace ${targetDir}: audit modularity (<=350 lines), security vulnerabilities, and quality gates. Update the dashboard at http://localhost:4242.`
+    ],
+    display_name: `Antigravity Auto-Pilot (${humanCadence})`
+  };
+
+  const sidecarPath = path.join(sidecarDir, 'sidecar.json');
+  fs.writeFileSync(sidecarPath, JSON.stringify(sidecarConfig, null, 2), 'utf8');
+
+  success(`Agendamento Automático criado com sucesso!`);
+  log(`Frequência: ${colors.bold}${humanCadence}${colors.reset} (${cronExpression})`, colors.green);
+  log(`Arquivo de configuração: ${sidecarPath}`, colors.dim);
+  log(`O Antigravity agora executará o Auto-Pilot periodicamente em segundo plano, registrando tudo no monitor :4242.\n`, colors.dim);
+}
+
+// ---------------------------------------------------------------------------
 // MAIN ROUTER
 // ---------------------------------------------------------------------------
 const args = process.argv.slice(2);
@@ -432,6 +612,20 @@ switch (command) {
       }
     } catch (e) {}
     require(serverPath);
+    break;
+  }
+  case 'autopilot':
+  case 'orchestrate': {
+    const target = args[1] && !args[1].startsWith('--') ? path.resolve(args[1]) : CWD;
+    const scheduleIndex = args.indexOf('--schedule');
+    const scheduleVal = scheduleIndex !== -1 ? args[scheduleIndex + 1] : null;
+    runAutopilot(target, scheduleVal);
+    break;
+  }
+  case 'schedule': {
+    const cadence = args[1] || 'daily';
+    const target = args[2] ? path.resolve(args[2]) : CWD;
+    runSchedule(cadence, target);
     break;
   }
   case '-v':

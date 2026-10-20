@@ -13,3 +13,8 @@ This file is automatically loaded by Google Antigravity across all sessions with
 2. **350-Line Limit**: Keep every source file under 350 lines. Deconstruct large modules using the facade pattern.
 3. **Subagent Discipline**: Reviewers are strictly read-only. Writers own distinct files with zero collisions.
 4. **Documentation Sync**: Any contract change must update `PRODUCT.md` or `docs/architecture.md`.
+
+## Antigravity Macros & Skill Orchestration
+- **`@autopilot` / `@skill-orchestrator`**: Invocable macro that scans codebase profile, checks compatibility of all 9 installed skills, and dispatches the highest-priority skill.
+- **Surgical Editing (ASEM)**: Follow the 5-phase surgical editing protocol (`docs/09-editing-methodology.md`).
+- **Recurring Monitoring**: Runs via `agy-vibe schedule [30m|daily]` and Antigravity native scheduled sidecars.
